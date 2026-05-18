@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PhotoBoothController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -17,3 +18,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::get('/sessions', [PhotoBoothController::class, 'sessions']);
+Route::get('/bookings', [PhotoBoothController::class, 'bookings']);
+Route::post('/bookings', [PhotoBoothController::class, 'storeBooking']);
+Route::get('/transactions', [PhotoBoothController::class, 'transactions']);

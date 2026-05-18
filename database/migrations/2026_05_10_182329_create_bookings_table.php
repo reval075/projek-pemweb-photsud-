@@ -13,19 +13,25 @@ return new class extends Migration
 {
     Schema::create('bookings', function (Blueprint $table) {
         $table->id();
-
         $table->string('customer_name');
-        $table->string('phone');
-        $table->date('event_date');
-        $table->string('location');
-        $table->string('package');
+        $table->string('customer_email')->nullable();
+        $table->string('customer_phone')->nullable();
+        $table->date('event_date')->nullable();
+        $table->text('event_location')->nullable();
+        $table->text('notes')->nullable();
 
         $table->enum('status', [
             'pending',
+            'approved',
+            'rejected',
             'confirmed',
-            'done',
+            'completed',
             'cancelled'
         ])->default('pending');
+
+        $table->foreignId('package_id')->nullable()->constrained('packages')->onDelete('set null');
+        $table->foreignId('branch_id')->nullable()->constrained('branches')->onDelete('set null');
+        $table->foreignId('availability_id')->nullable()->constrained('availabilities')->onDelete('set null');
 
         $table->timestamps();
     });

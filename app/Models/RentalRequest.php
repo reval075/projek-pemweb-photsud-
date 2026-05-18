@@ -5,18 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Booth extends Model
+class RentalRequest extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'branch_id',
-        'name',
+        'customer_name',
+        'customer_phone',
+        'start_date',
+        'end_date',
         'status',
     ];
 
-    public function branch()
+    public function items()
     {
-        return $this->belongsTo(Branch::class);
+        return $this->hasMany(RentalItem::class);
     }
 }
