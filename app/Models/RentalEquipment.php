@@ -9,6 +9,8 @@ class RentalEquipment extends Model
 {
     use HasFactory;
 
+    protected $table = 'rental_equipments';
+
     protected $fillable = [
         'name',
         'category',

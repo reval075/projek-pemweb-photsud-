@@ -14,7 +14,12 @@ return new class extends Migration
         Schema::create('branches', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('location');
+            $table->text('address')->nullable();
+            $table->string('phone')->nullable();
+            $table->text('maps_link')->nullable();
+            $table->string('image')->nullable();
+            $table->string('operating_hours')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

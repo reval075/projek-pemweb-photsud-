@@ -14,5 +14,5 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('app');
+    return response()->json(['message' => 'PhotoStudio API aman boss']);
 });

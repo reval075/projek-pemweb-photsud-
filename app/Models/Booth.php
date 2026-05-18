@@ -19,4 +19,9 @@ class Booth extends Model
     {
         return $this->belongsTo(Branch::class);
     }
+
+    public function availabilities()
+    {
+        return $this->hasMany(Availability::class);
+    }
 }

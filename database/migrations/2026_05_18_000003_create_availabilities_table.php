@@ -10,7 +10,13 @@ return new class extends Migration
     {
         Schema::create('availabilities', function (Blueprint $table) {
             $table->id();
+
+            // Slot ketersediaan terikat ke booth tertentu
+            $table->foreignId('booth_id')->constrained('booths')->onDelete('cascade');
+
             $table->date('date');
+            $table->time('start_time')->nullable();
+            $table->time('end_time')->nullable();
             $table->enum('status', ['available', 'booked', 'unavailable', 'pending'])->default('available');
             $table->text('notes')->nullable();
             $table->timestamps();

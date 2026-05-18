@@ -20,6 +20,7 @@ class Booking extends Model
         'package_id',
         'branch_id',
         'availability_id',
+        'total_price',
     ];
 
     public function package()
