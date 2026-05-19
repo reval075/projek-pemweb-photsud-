@@ -43,6 +43,11 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
+        // Di dalam $middlewareGroups -> 'web'
+        'web' => [
+        // middleware lainnya...
+        \App\Http\Middleware\HandleInertiaRequests::class,
+        ],
     ];
 
     /**
