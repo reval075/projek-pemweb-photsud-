@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --color-off-white: #F9F8F6;
+  --color-charcoal: #1C1C1C;
+  --color-beige: #E8E5DF;
+  --color-warm-grey: #A39E93;
+  --font-sans: "Inter", sans-serif;
+  --font-serif: "Playfair Display", serif;
+}
+
+@layer base {
+  body {
+    @apply bg-off-white text-charcoal font-sans antialiased selection:bg-charcoal selection:text-off-white;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif font-medium tracking-tight;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
