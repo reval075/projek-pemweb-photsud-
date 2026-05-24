@@ -1,17 +1,34 @@
 @import "tailwindcss";
 
 @theme {
-  --color-off-white: #F9F8F6;
-  --color-charcoal: #1C1C1C;
-  --color-beige: #E8E5DF;
-  --color-warm-grey: #A39E93;
+  /* Primary - dari logo Memoforia (biru periwinkle) */
+  --color-primary: #9BB5D3;
+  --color-primary-light: #B8CCE1;
+  --color-primary-dark: #7A9CC0;
+  --color-primary-50: #F0F4F8;
+  --color-primary-100: #E1E9F1;
+  --color-primary-200: #C5D5E5;
+  --color-primary-900: #2C3E50;
+
+  /* Accent - bintang emas dari logo */
+  --color-accent: #E8C44D;
+  --color-accent-light: #F2D877;
+
+  /* Neutral */
+  --color-off-white: #F8F9FC;
+  --color-charcoal: #2C3E50;
+  --color-slate: #4A5568;
+  --color-beige: #EEF2F7;
+  --color-warm-grey: #8E99A4;
+
+  /* Fonts */
   --font-sans: "Inter", sans-serif;
   --font-serif: "Playfair Display", serif;
 }
 
 @layer base {
   body {
-    @apply bg-off-white text-charcoal font-sans antialiased selection:bg-charcoal selection:text-off-white;
+    @apply bg-off-white text-charcoal font-sans antialiased selection:bg-primary selection:text-white;
   }
   
   h1, h2, h3, h4, h5, h6 {
