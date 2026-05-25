@@ -1,26 +1,22 @@
-import { useForm, Link, Head } from '@inertiajs/react';
+import { useForm, Head } from '@inertiajs/react';
 import { Loader2, Lock, Mail, ArrowRight } from 'lucide-react';
 
-export default function Login() {
+export default function ResetPassword({ token, email }) {
     const form = useForm({
-        email: '',
+        token: token || '',
+        email: email || '',
         password: '',
-        remember: false,
+        password_confirmation: '',
     });
 
     const submit = (event) => {
         event.preventDefault();
-        form.post('/login');
+        form.post('/reset-password');
     };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-primary/10 via-primary-50 to-off-white flex flex-col items-center justify-center p-6 font-sans select-none">
-            <Head title="Masuk Admin" />
-
-            {/* Back to Home Link */}
-            <Link href="/" className="absolute top-8 left-8 text-sm text-charcoal/60 hover:text-primary-dark transition-colors duration-300 flex items-center space-x-2">
-                <span>← Kembali ke Home</span>
-            </Link>
+            <Head title="Atur Ulang Kata Sandi" />
 
             <div className="w-full max-w-[420px] bg-white p-10 rounded-3xl shadow-xl shadow-primary/5 border border-primary-50">
                 {/* Brand Header */}
@@ -31,10 +27,13 @@ export default function Login() {
                         className="h-16 w-16 rounded-full mx-auto mb-4 object-cover shadow-md shadow-primary/10" 
                     />
                     <h1 className="font-serif text-3xl text-charcoal tracking-wide">MemForia</h1>
-                    <p className="text-sm text-warm-grey mt-1">Control Panel Admin</p>
+                    <p className="text-sm text-warm-grey mt-1">Atur Ulang Kata Sandi Admin</p>
                 </div>
 
-                <form onSubmit={submit} className="space-y-6">
+                <form onSubmit={submit} className="space-y-5">
+                    {/* Hidden Token Input */}
+                    <input type="hidden" name="token" value={form.data.token} />
+
                     {/* Email Input */}
                     <div>
                         <label className="block text-sm text-charcoal font-medium mb-2">Email Address</label>
@@ -57,18 +56,13 @@ export default function Login() {
 
                     {/* Password Input */}
                     <div>
-                        <div className="flex justify-between items-center mb-2">
-                            <label className="block text-sm text-charcoal font-medium">Kata Sandi</label>
-                            <Link href="/forgot-password" className="text-xs text-primary-dark hover:text-primary transition-colors font-medium">
-                                Lupa sandi?
-                            </Link>
-                        </div>
+                        <label className="block text-sm text-charcoal font-medium mb-2">Kata Sandi Baru</label>
                         <div className="relative">
                             <input
                                 value={form.data.password}
                                 onChange={(e) => form.setData('password', e.target.value)}
                                 type="password"
-                                autoComplete="current-password"
+                                autoComplete="new-password"
                                 className={`w-full pl-11 pr-5 py-3 rounded-xl border-2 bg-off-white text-sm focus:outline-none transition-colors duration-300 ${form.errors.password ? 'border-red-300 focus:border-red-500' : 'border-beige focus:border-primary'}`}
                                 placeholder="••••••••"
                                 required
@@ -80,17 +74,24 @@ export default function Login() {
                         )}
                     </div>
 
-                    {/* Remember Me */}
-                    <div className="flex items-center">
-                        <label className="flex items-center text-sm text-slate select-none cursor-pointer">
+                    {/* Confirm Password Input */}
+                    <div>
+                        <label className="block text-sm text-charcoal font-medium mb-2">Konfirmasi Kata Sandi Baru</label>
+                        <div className="relative">
                             <input
-                                type="checkbox"
-                                checked={form.data.remember}
-                                onChange={(e) => form.setData('remember', e.target.checked)}
-                                className="mr-2 rounded border-primary-200 text-primary-dark focus:ring-primary-light h-4 w-4"
+                                value={form.data.password_confirmation}
+                                onChange={(e) => form.setData('password_confirmation', e.target.value)}
+                                type="password"
+                                autoComplete="new-password"
+                                className={`w-full pl-11 pr-5 py-3 rounded-xl border-2 bg-off-white text-sm focus:outline-none transition-colors duration-300 ${form.errors.password_confirmation ? 'border-red-300 focus:border-red-500' : 'border-beige focus:border-primary'}`}
+                                placeholder="••••••••"
+                                required
                             />
-                            Ingat saya di perangkat ini
-                        </label>
+                            <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-warm-grey" />
+                        </div>
+                        {form.errors.password_confirmation && (
+                            <p className="text-xs text-red-500 mt-2 font-medium">{form.errors.password_confirmation}</p>
+                        )}
                     </div>
 
                     {/* Submit Button */}
@@ -103,7 +104,7 @@ export default function Login() {
                             <Loader2 size={18} className="animate-spin" />
                         ) : (
                             <>
-                                <span>Masuk Ke Dashboard</span>
+                                <span>Reset Kata Sandi</span>
                                 <ArrowRight size={16} />
                             </>
                         )}

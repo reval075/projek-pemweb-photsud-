@@ -14,6 +14,16 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // 0. Default Admin User
+        \App\Models\User::firstOrCreate(
+            ['email' => 'admin@memforia.com'],
+            [
+                'name' => 'Admin Memoforia',
+                'password' => \Illuminate\Support\Facades\Hash::make('password'),
+                'role' => 'admin',
+            ]
+        );
+
         // 1. Branches
         $branch1 = Branch::create([
             'name' => 'Studio Pusat Jakarta',
