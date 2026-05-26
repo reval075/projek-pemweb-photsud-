@@ -1,7 +1,7 @@
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Loader2, Search, ArrowRight } from 'lucide-react';
 import { TRACKING_SESSION_KEY } from '../constants/tracking';
@@ -14,6 +14,17 @@ export default function TrackBooking() {
     const [fieldErrors, setFieldErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [codePrefilled, setCodePrefilled] = useState(false);
+
+    // Pre-fill booking code from success flow (?code= only — no sensitive data in URL)
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        if (code) {
+            setForm((prev) => ({ ...prev, booking_code: code.trim() }));
+            setCodePrefilled(true);
+        }
+    }, []);
 
     const updateForm = (key, value) => {
         setForm((prev) => ({ ...prev, [key]: value }));
@@ -109,6 +120,11 @@ export default function TrackBooking() {
                         <p className="text-slate font-light text-sm leading-relaxed">
                             Masukkan kode booking dan email atau nomor HP yang digunakan saat pengajuan booking.
                         </p>
+                        {codePrefilled && (
+                            <p className="text-xs text-primary font-medium mt-3">
+                                Kode booking sudah terisi. Lengkapi email atau nomor HP untuk melanjutkan.
+                            </p>
+                        )}
                     </div>
 
                     <div className="bg-white p-8 md:p-10 rounded-3xl shadow-xl shadow-primary/5 border border-primary-50">

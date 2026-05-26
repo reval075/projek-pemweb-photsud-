@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ArrowRight, ArrowLeft, CheckCircle, Loader2, Calendar, Package, User, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import BookingSuccess from '../components/BookingSuccess';
 
 const STEPS = ['Select Date', 'Choose Service', 'Template & Addons', 'Event Details', 'Confirmation'];
 
@@ -28,6 +29,7 @@ export default function Booking() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [submittedBooking, setSubmittedBooking] = useState(null);
     const [error, setError] = useState('');
 
     // Dynamic Lists
@@ -244,7 +246,8 @@ export default function Booking() {
         };
 
         try {
-            await axios.post('/api/bookings', payload);
+            const response = await axios.post('/api/bookings', payload);
+            setSubmittedBooking(response.data?.data || null);
             setSuccess(true);
         } catch (err) {
             setError(err.response?.data?.message || 'Terjadi kesalahan saat memproses booking.');
@@ -268,19 +271,10 @@ export default function Booking() {
         return (
             <GuestLayout>
                 <Head title="Booking Submitted Successfully" />
-                <section className="py-24 px-6 min-h-[70vh] flex items-center justify-center">
-                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center max-w-lg mx-auto bg-white p-12 rounded-3xl shadow-xl border border-primary-50">
-                        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <CheckCircle size={40} className="text-green-500" />
-                        </div>
-                        <h2 className="text-3xl font-serif mb-4 text-charcoal">Booking Berhasil Diajukan!</h2>
-                        <p className="text-slate font-light mb-2">Terima kasih, <strong>{form.customer_name}</strong>.</p>
-                        <p className="text-slate font-light mb-6 text-sm leading-relaxed">
-                            Pengajuan booking Anda untuk tanggal <strong>{form.event_date}</strong> sedang dalam peninjauan admin. Kami akan mengirimkan email notifikasi status pemesanan beserta tata cara pembayaran DP (Down Payment) untuk mengunci tanggal pemesanan Anda.
-                        </p>
-                        <a href="/" className="inline-block bg-primary text-white px-8 py-3 rounded-full hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">Kembali ke Beranda</a>
-                    </motion.div>
-                </section>
+                <BookingSuccess
+                    booking={submittedBooking}
+                    customerName={form.customer_name}
+                />
             </GuestLayout>
         );
     }

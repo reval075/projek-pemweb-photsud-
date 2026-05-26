@@ -139,6 +139,22 @@ class BookingTest extends TestCase
         ]);
 
         $response->assertStatus(201);
+        $response->assertJsonStructure([
+            'success',
+            'message',
+            'data' => [
+                'booking_code',
+                'status',
+                'event_name',
+                'total_price',
+                'service_package',
+                'package_variant',
+            ],
+            'errors',
+        ]);
+        $this->assertTrue($response->json('success'));
+        $this->assertEquals('pending_approval', $response->json('data.status'));
+
         $this->assertDatabaseHas('bookings', [
             'customer_name' => 'John Doe',
             'event_date' => '2026-06-10',
@@ -149,6 +165,7 @@ class BookingTest extends TestCase
 
         $booking = Booking::first();
         $this->assertNotNull($booking->booking_code);
+        $this->assertEquals($response->json('data.booking_code'), $booking->booking_code);
         $this->assertCount(1, $booking->addons);
         $this->assertEquals(10, $booking->addons->first()->pivot->quantity);
     }
