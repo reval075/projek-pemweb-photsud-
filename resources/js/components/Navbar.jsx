@@ -17,7 +17,7 @@ export default function Navbar() {
 
     const navLinks = [
         { name: 'Home', href: '/' },
-        { name: 'Book Studio', href: '/booking' },
+        { name: 'Book Studio', href: '/booking-session' },
         { name: 'Rentals', href: '/rentals' },
         { name: 'Pricelist', href: '/pricelist' },
         { name: 'Branches', href: '/branches' },
@@ -55,7 +55,7 @@ export default function Navbar() {
                     {/* CTA Button - Desktop */}
                     <div className="hidden md:block">
                         <Link 
-                            href="/booking" 
+                            href="/booking-session" 
                             className="bg-primary text-white px-6 py-2.5 rounded-full text-sm uppercase tracking-widest hover:bg-primary-dark transition-all duration-300"
                         >
                             Book Now

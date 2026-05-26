@@ -10,7 +10,13 @@ Route::get('/', function () {
 });
 
 Route::get('/booking', function () {
-    return Inertia::render('Booking');
+    return Inertia::render('Booking', [
+        'initialDate' => request()->query('date'),
+    ]);
+});
+
+Route::get('/booking-session', function () {
+    return Inertia::render('BookingSession');
 });
 
 Route::get('/track-booking', function () {
@@ -26,11 +32,23 @@ Route::get('/rentals', function () {
 });
 
 Route::get('/pricelist', function () {
-    return Inertia::render('Pricelist');
+    return Inertia::render('Pricelist', [
+        'packages' => \App\Models\ServicePackage::with('packageVariants')
+            ->where('is_active', true)
+            ->orderBy('category')
+            ->get(),
+        'boothPackages' => \App\Models\Package::orderBy('price')->get(),
+        'addons' => \App\Models\Addon::where('is_active', true)->orderBy('price')->get(),
+    ]);
 });
 
 Route::get('/branches', function () {
-    return Inertia::render('Branches');
+    return Inertia::render('Branches', [
+        'branches' => \App\Models\Branch::with('booths')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(),
+    ]);
 });
 
 // Authentication Routes
