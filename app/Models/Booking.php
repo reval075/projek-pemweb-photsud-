@@ -83,6 +83,49 @@ class Booking extends Model
         return true;
     }
 
+    /**
+     * Normalize phone numbers for consistent comparison (e.g. 08xx vs 628xx).
+     */
+    public static function normalizePhone(?string $phone): string
+    {
+        $digits = preg_replace('/\D+/', '', (string) $phone);
+
+        if ($digits === '') {
+            return '';
+        }
+
+        if (str_starts_with($digits, '62')) {
+            return $digits;
+        }
+
+        if (str_starts_with($digits, '0')) {
+            return '62'.substr($digits, 1);
+        }
+
+        return $digits;
+    }
+
+    /**
+     * Verify guest contact matches booking email or phone.
+     */
+    public function contactMatches(string $contact): bool
+    {
+        $contact = trim($contact);
+
+        if ($contact === '') {
+            return false;
+        }
+
+        if (filter_var($contact, FILTER_VALIDATE_EMAIL)) {
+            return strcasecmp((string) $this->customer_email, $contact) === 0;
+        }
+
+        $normalizedContact = self::normalizePhone($contact);
+        $normalizedBooking = self::normalizePhone($this->customer_phone);
+
+        return $normalizedContact !== '' && $normalizedContact === $normalizedBooking;
+    }
+
     public function servicePackage()
     {
         return $this->belongsTo(ServicePackage::class, 'service_package_id');

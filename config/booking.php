@@ -16,4 +16,11 @@ return [
     */
     'dp_expiration_hours' => env('BOOKING_DP_EXPIRATION_HOURS', 12),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Payment Proof Upload (KB)
+    |--------------------------------------------------------------------------
+    */
+    'payment_proof_max_kb' => env('BOOKING_PAYMENT_PROOF_MAX_KB', 5120),
+
 ];

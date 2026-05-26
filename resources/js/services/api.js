@@ -26,3 +26,18 @@ export async function createBooking(payload) {
     const response = await api.post('/api/bookings', payload);
     return response.data;
 }
+
+export async function trackBooking(bookingCode, contact) {
+    const response = await api.post('/api/bookings/track', {
+        booking_code: bookingCode,
+        contact,
+    });
+    return response.data;
+}
+
+export async function uploadPaymentProof(formData) {
+    const response = await api.post('/api/bookings/payment-proof', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+}

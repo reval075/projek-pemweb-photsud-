@@ -23,6 +23,8 @@ Route::get('/packages/{id}', [PackageController::class, 'show']);
 Route::get('/availabilities', [AvailabilityController::class, 'index']); // Get slots
 
 Route::post('/bookings', [BookingController::class, 'store']); // Guest booking
+Route::post('/bookings/track', [BookingController::class, 'track'])
+    ->middleware('throttle:10,1'); // Guest booking lookup
 Route::post('/bookings/payment-proof', [BookingController::class, 'uploadProof']); // Guest uploads payment proof
 
 Route::get('/addons', function () {

@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class BookingController extends Controller
 {
@@ -235,21 +236,83 @@ class BookingController extends Controller
     }
 
     /**
+     * Guest booking lookup for tracking (booking_code + email or phone).
+     */
+    public function track(Request $request)
+    {
+        $validated = $request->validate([
+            'booking_code' => 'required|string|max:50',
+            'contact' => 'required|string|max:255',
+        ]);
+
+        $booking = Booking::with([
+            'servicePackage',
+            'packageVariant',
+            'selectedTemplate',
+            'addons',
+            'payments' => fn ($query) => $query->latest(),
+        ])
+            ->where('booking_code', $validated['booking_code'])
+            ->first();
+
+        if (! $booking || ! $booking->contactMatches($validated['contact'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking tidak ditemukan atau data kontak tidak cocok.',
+                'data' => null,
+                'errors' => null,
+            ], 422);
+        }
+
+        // Realtime expiration sync (same source of truth as payment flows).
+        if ($booking->markAsExpiredIfDpElapsed()) {
+            $booking->refresh();
+            $booking->load([
+                'servicePackage',
+                'packageVariant',
+                'selectedTemplate',
+                'addons',
+                'payments' => fn ($query) => $query->latest(),
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Booking ditemukan.',
+            'data' => $this->formatTrackingPayload($booking),
+            'errors' => null,
+        ]);
+    }
+
+    /**
      * Guest uploads a payment proof (DP or Settlement).
      *
      * Guards against expired/cancelled/rejected bookings.
      */
     public function uploadProof(Request $request)
     {
+        $maxKb = (int) config('booking.payment_proof_max_kb', 5120);
+
         $validated = $request->validate([
-            'booking_code' => 'required|exists:bookings,booking_code',
+            'booking_code' => 'required|string|max:50',
+            'contact' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0',
             'payment_type' => 'required|in:dp,settlement,full_payment',
             'payment_method' => 'required|string|max:255',
-            'proof_image' => 'required|string', // Base64 or URL/path
+            'proof_file' => 'required_without:proof_image|file|image|max:'.$maxKb,
+            'proof_image' => 'required_without:proof_file|string',
         ]);
 
-        $booking = Booking::where('booking_code', $validated['booking_code'])->firstOrFail();
+        $booking = Booking::where('booking_code', $validated['booking_code'])->first();
+
+        if (! $booking || ! $booking->contactMatches($validated['contact'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking tidak ditemukan atau data kontak tidak cocok.',
+                'data' => null,
+                'errors' => null,
+            ], 422);
+        }
 
         // Realtime expiration sync: do not rely only on scheduler.
         if ($booking->markAsExpiredIfDpElapsed()) {
@@ -260,10 +323,37 @@ class BookingController extends Controller
         if (in_array($booking->status, ['expired', 'cancelled', 'rejected', 'completed'])) {
             return response()->json([
                 'success' => false,
-                'message' => 'Booking ini sudah ' . $booking->status . ' dan tidak dapat menerima pembayaran.',
+                'message' => 'Booking ini sudah '.$booking->status.' dan tidak dapat menerima pembayaran.',
                 'data' => null,
                 'errors' => null,
             ], 422);
+        }
+
+        $uploadCapabilities = $this->resolveUploadCapabilities($booking);
+
+        if (! $uploadCapabilities['can_upload_proof']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking tidak dalam status yang mengizinkan upload bukti pembayaran.',
+                'data' => null,
+                'errors' => null,
+            ], 422);
+        }
+
+        if (! in_array($validated['payment_type'], $uploadCapabilities['allowed_payment_types'], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Jenis pembayaran tidak valid untuk status booking saat ini.',
+                'data' => null,
+                'errors' => null,
+            ], 422);
+        }
+
+        $proofImage = $validated['proof_image'] ?? null;
+
+        if ($request->hasFile('proof_file')) {
+            $storedPath = $request->file('proof_file')->store('payment-proofs', 'public');
+            $proofImage = Storage::disk('public')->url($storedPath);
         }
 
         $payment = Payment::create([
@@ -271,7 +361,7 @@ class BookingController extends Controller
             'amount' => $validated['amount'],
             'payment_type' => $validated['payment_type'],
             'payment_method' => $validated['payment_method'],
-            'proof_image' => $validated['proof_image'],
+            'proof_image' => $proofImage,
             'status' => 'pending',
         ]);
 
@@ -507,5 +597,101 @@ class BookingController extends Controller
             'data' => $booking,
             'errors' => null,
         ]);
+    }
+
+    /**
+     * Build a guest-safe tracking payload for public lookup responses.
+     */
+    private function formatTrackingPayload(Booking $booking): array
+    {
+        $uploadCapabilities = $this->resolveUploadCapabilities($booking);
+
+        return [
+            'booking_code' => $booking->booking_code,
+            'status' => $booking->status,
+            'payment_status' => $booking->payment_status,
+            'customer_name' => $booking->customer_name,
+            'customer_email' => $booking->customer_email,
+            'customer_phone' => $booking->customer_phone,
+            'created_at' => $booking->created_at,
+            'event_name' => $booking->event_name,
+            'event_location' => $booking->event_location,
+            'event_date' => $booking->event_date,
+            'event_datetime' => $booking->event_datetime,
+            'total_price' => $booking->total_price,
+            'notes' => $booking->notes,
+            'approved_at' => $booking->approved_at,
+            'confirmed_at' => $booking->confirmed_at,
+            'cancelled_at' => $booking->cancelled_at,
+            'dp_expired_at' => $booking->dp_expired_at,
+            'is_dp_expired' => $booking->status === 'expired',
+            'can_upload_proof' => $uploadCapabilities['can_upload_proof'],
+            'allowed_payment_types' => $uploadCapabilities['allowed_payment_types'],
+            'service_package' => $booking->servicePackage ? [
+                'id' => $booking->servicePackage->id,
+                'name' => $booking->servicePackage->name,
+                'category' => $booking->servicePackage->category,
+            ] : null,
+            'package_variant' => $booking->packageVariant ? [
+                'id' => $booking->packageVariant->id,
+                'name' => $booking->packageVariant->name,
+                'price' => $booking->packageVariant->price,
+                'duration_hours' => $booking->packageVariant->duration_hours,
+                'print_limit' => $booking->packageVariant->print_limit,
+                'is_unlimited' => (bool) $booking->packageVariant->is_unlimited,
+            ] : null,
+            'selected_template' => $booking->selectedTemplate ? [
+                'id' => $booking->selectedTemplate->id,
+                'name' => $booking->selectedTemplate->name,
+                'size' => $booking->selectedTemplate->size,
+            ] : null,
+            'addons' => $booking->addons->map(fn ($addon) => [
+                'id' => $addon->id,
+                'name' => $addon->name,
+                'quantity' => $addon->pivot->quantity,
+                'price' => $addon->pivot->price,
+            ])->values(),
+            'payments' => $booking->payments->map(fn ($payment) => [
+                'id' => $payment->id,
+                'amount' => $payment->amount,
+                'payment_type' => $payment->payment_type,
+                'payment_method' => $payment->payment_method,
+                'status' => $payment->status,
+                'created_at' => $payment->created_at,
+                'verified_at' => $payment->verified_at,
+            ])->values(),
+        ];
+    }
+
+    /**
+     * Determine whether guest can upload payment proof from tracking context.
+     */
+    private function resolveUploadCapabilities(Booking $booking): array
+    {
+        $canUpload = false;
+        $allowedTypes = [];
+
+        if (in_array($booking->status, ['expired', 'cancelled', 'rejected', 'completed'])) {
+            return [
+                'can_upload_proof' => false,
+                'allowed_payment_types' => [],
+            ];
+        }
+
+        if ($booking->status === 'waiting_dp') {
+            $canUpload = true;
+            $allowedTypes = ['dp'];
+        } elseif ($booking->status === 'confirmed' && $booking->payment_status === 'partially_paid') {
+            $canUpload = true;
+            $allowedTypes = ['settlement'];
+        } elseif ($booking->status === 'confirmed' && $booking->payment_status === 'unpaid') {
+            $canUpload = true;
+            $allowedTypes = ['full_payment'];
+        }
+
+        return [
+            'can_upload_proof' => $canUpload,
+            'allowed_payment_types' => $allowedTypes,
+        ];
     }
 }

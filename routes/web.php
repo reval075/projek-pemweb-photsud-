@@ -13,6 +13,14 @@ Route::get('/booking', function () {
     return Inertia::render('Booking');
 });
 
+Route::get('/track-booking', function () {
+    return Inertia::render('TrackBooking');
+});
+
+Route::get('/track-booking/detail', function () {
+    return Inertia::render('TrackBookingDetail');
+});
+
 Route::get('/rentals', function () {
     return Inertia::render('Rentals');
 });
