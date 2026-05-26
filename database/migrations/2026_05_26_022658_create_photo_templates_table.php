@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('service_packages', function (Blueprint $table) {
+        Schema::create('photo_templates', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('category')->nullable();
-            $table->text('description')->nullable();
+            $table->string('size')->default('4R'); // e.g. 4R, 2x6 strip
+            $table->string('preview_image')->nullable();
+            $table->string('frame_type')->nullable(); // e.g. vintage, modern, neon
+            $table->string('layout_type')->nullable(); // e.g. 3-grid, 4-grid, single
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
@@ -26,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('service_packages');
+        Schema::dropIfExists('photo_templates');
     }
 };

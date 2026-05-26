@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('service_packages', function (Blueprint $table) {
+        Schema::create('booking_addons', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('category')->nullable();
-            $table->text('description')->nullable();
-            $table->boolean('is_active')->default(true);
+            $table->foreignId('booking_id')->constrained('bookings')->onDelete('cascade');
+            $table->foreignId('addon_id')->constrained('addons')->onDelete('cascade');
+            $table->integer('quantity')->default(1);
+            $table->decimal('price', 12, 2)->default(0);
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('service_packages');
+        Schema::dropIfExists('booking_addons');
     }
 };

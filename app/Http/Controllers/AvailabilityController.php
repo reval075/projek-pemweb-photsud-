@@ -30,9 +30,9 @@ class AvailabilityController extends Controller
             ->pluck('date')
             ->toArray();
 
-        // Get booked dates (approved, confirmed, completed bookings)
+        // Get booked dates (confirmed, completed bookings only)
         $booked = Booking::whereBetween('event_date', [$start->toDateString(), $end->toDateString()])
-            ->whereIn('status', ['approved', 'confirmed', 'completed'])
+            ->whereIn('status', ['confirmed', 'completed'])
             ->pluck('event_date')
             ->toArray();
 
@@ -63,9 +63,9 @@ class AvailabilityController extends Controller
 
         $eventDate = Carbon::parse($validated['date'])->toDateString();
 
-        // Double check if there is an approved event on this date
+        // Double check if there is an active event on this date
         $hasApprovedEvent = Booking::where('event_date', $eventDate)
-            ->whereIn('status', ['approved', 'confirmed', 'completed'])
+            ->whereIn('status', ['confirmed', 'completed'])
             ->exists();
 
         if ($hasApprovedEvent) {

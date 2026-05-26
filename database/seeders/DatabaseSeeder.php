@@ -73,33 +73,144 @@ class DatabaseSeeder extends Seeder
             'description' => '4 Lembar cetak + Softcopy + GIF Animation',
         ]);
 
-        // 3a. Service Packages
-        \App\Models\ServicePackage::create([
-            'name' => 'Wedding Photobooth',
+        // 3a. Service Packages & Varian
+        $softfile = \App\Models\ServicePackage::create([
+            'name' => 'Soft File Only',
+            'category' => 'soft_file',
+            'description' => 'Foto sepuasnya tanpa cetak fisik, semua file resolusi tinggi dikirim via digital link.',
+            'is_active' => true,
+        ]);
+
+        \App\Models\PackageVariant::create([
+            'service_package_id' => $softfile->id,
+            'name' => '1 Jam Session',
+            'duration_hours' => 1,
+            'price' => 750000,
+            'extra_hour_price' => 350000,
+            'is_unlimited' => true,
+        ]);
+
+        \App\Models\PackageVariant::create([
+            'service_package_id' => $softfile->id,
+            'name' => '2 Jam Session',
+            'duration_hours' => 2,
+            'price' => 1200000,
+            'extra_hour_price' => 300000,
+            'is_unlimited' => true,
+        ]);
+
+        $basicUnlimited = \App\Models\ServicePackage::create([
+            'name' => 'Basic Unlimited',
+            'category' => 'unlimited_print',
+            'description' => 'Cetak foto sepuasnya dengan layout strip klasik, perlengkapan standar studio.',
+            'is_active' => true,
+        ]);
+
+        \App\Models\PackageVariant::create([
+            'service_package_id' => $basicUnlimited->id,
+            'name' => '2 Jam Unlimited',
+            'duration_hours' => 2,
+            'price' => 1800000,
+            'extra_hour_price' => 500000,
+            'is_unlimited' => true,
+        ]);
+
+        \App\Models\PackageVariant::create([
+            'service_package_id' => $basicUnlimited->id,
+            'name' => '3 Jam Unlimited',
+            'duration_hours' => 3,
+            'price' => 2400000,
+            'extra_hour_price' => 450000,
+            'is_unlimited' => true,
+        ]);
+
+        $premiumUnlimited = \App\Models\ServicePackage::create([
+            'name' => 'Premium Unlimited',
+            'category' => 'unlimited_print',
+            'description' => 'Cetak sepuasnya, kualitas premium, kustomisasi layout frame, pencahayaan studio profesional, 2 crew.',
+            'is_active' => true,
+        ]);
+
+        \App\Models\PackageVariant::create([
+            'service_package_id' => $premiumUnlimited->id,
+            'name' => '3 Jam Premium',
+            'duration_hours' => 3,
             'price' => 3500000,
-            'duration' => '6 Jam',
-            'description' => 'Unlimited prints for 6 hours, professional lighting, custom photo frame layout, 1 photographer + 1 assistant.',
+            'extra_hour_price' => 800000,
+            'is_unlimited' => true,
         ]);
 
-        \App\Models\ServicePackage::create([
-            'name' => 'Graduation / Wisuda',
-            'price' => 2000000,
-            'duration' => '4 Jam',
-            'description' => 'Unlimited prints for 4 hours, basic studio setup, softcopy digital link, 1 photographer.',
+        $limitedPrints = \App\Models\ServicePackage::create([
+            'name' => 'Limited Prints',
+            'category' => 'limited_print',
+            'description' => 'Cetak dengan batasan jumlah lembar, cocok untuk event skala kecil atau perorangan.',
+            'is_active' => true,
         ]);
 
-        \App\Models\ServicePackage::create([
-            'name' => 'Birthday Party',
+        \App\Models\PackageVariant::create([
+            'service_package_id' => $limitedPrints->id,
+            'name' => '100 Lembar Cetak',
+            'print_limit' => 100,
             'price' => 1500000,
-            'duration' => '3 Jam',
-            'description' => 'Unlimited prints for 3 hours, fun props, digital files share link, 1 assistant.',
+            'is_unlimited' => false,
         ]);
 
-        \App\Models\ServicePackage::create([
-            'name' => 'Corporate Event',
-            'price' => 5000000,
-            'duration' => '8 Jam',
-            'description' => 'Unlimited prints for 8 hours, custom backdrop branding, high-speed printer, 2 staff members.',
+        \App\Models\PackageVariant::create([
+            'service_package_id' => $limitedPrints->id,
+            'name' => '200 Lembar Cetak',
+            'print_limit' => 200,
+            'price' => 2200000,
+            'is_unlimited' => false,
+        ]);
+
+        // 3b. Addons
+        \App\Models\Addon::create([
+            'name' => 'Gantungan Kunci / Keychain',
+            'description' => 'Gantungan kunci akrilik bening untuk menyisipkan cetakan foto (per pcs).',
+            'price' => 10000,
+            'is_active' => true,
+        ]);
+
+        \App\Models\Addon::create([
+            'name' => 'Custom Background / Backdrop',
+            'description' => 'Kustomisasi backdrop cetak digital sesuai tema acara.',
+            'price' => 500000,
+            'is_active' => true,
+        ]);
+
+        \App\Models\Addon::create([
+            'name' => 'Extra 1 Hour',
+            'description' => 'Penambahan durasi operational photobooth sebanyak 1 jam.',
+            'price' => 400000,
+            'is_active' => true,
+        ]);
+
+        // 3c. Photo Templates
+        \App\Models\PhotoTemplate::create([
+            'name' => 'Classic 2x6 Strip',
+            'size' => '2x6',
+            'preview_image' => 'classic_strip.png',
+            'frame_type' => 'Classic',
+            'layout_type' => '3-Grid Vertical',
+            'is_active' => true,
+        ]);
+
+        \App\Models\PhotoTemplate::create([
+            'name' => 'Modern 4R Square',
+            'size' => '4R',
+            'preview_image' => 'modern_4r.png',
+            'frame_type' => 'Minimalist',
+            'layout_type' => '4-Grid Grid',
+            'is_active' => true,
+        ]);
+
+        \App\Models\PhotoTemplate::create([
+            'name' => 'Elegant Single 4R',
+            'size' => '4R',
+            'preview_image' => 'elegant_single.png',
+            'frame_type' => 'Vintage',
+            'layout_type' => 'Single Portrait',
+            'is_active' => true,
         ]);
 
         // 4. Rental Equipments

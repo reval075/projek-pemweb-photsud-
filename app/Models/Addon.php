@@ -5,26 +5,22 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ServicePackage extends Model
+class Addon extends Model
 {
     use HasFactory;
 
-    protected $table = 'service_packages';
-
     protected $fillable = [
         'name',
-        'category',
         'description',
+        'price',
+        'image',
         'is_active',
     ];
 
-    public function packageVariants()
-    {
-        return $this->hasMany(PackageVariant::class);
-    }
-
     public function bookings()
     {
-        return $this->hasMany(Booking::class, 'service_package_id');
+        return $this->belongsToMany(Booking::class, 'booking_addons')
+            ->withPivot('quantity', 'price')
+            ->withTimestamps();
     }
 }

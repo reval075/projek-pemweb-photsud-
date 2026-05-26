@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('service_packages', function (Blueprint $table) {
+        Schema::create('addons', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('category')->nullable();
             $table->text('description')->nullable();
+            $table->decimal('price', 12, 2)->default(0);
+            $table->string('image')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('service_packages');
+        Schema::dropIfExists('addons');
     }
 };

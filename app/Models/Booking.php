@@ -17,11 +17,15 @@ class Booking extends Model
         'event_name',
         'event_location',
         'event_date',
+        'event_datetime',
         'service_package_id',
+        'package_variant_id',
+        'selected_template_id',
         'notes',
         'status',
         'approved_by',
         'approved_at',
+        'confirmed_at',
         'payment_status',
         'cancelled_at',
         'total_price',
@@ -33,6 +37,23 @@ class Booking extends Model
     public function servicePackage()
     {
         return $this->belongsTo(ServicePackage::class, 'service_package_id');
+    }
+
+    public function packageVariant()
+    {
+        return $this->belongsTo(PackageVariant::class, 'package_variant_id');
+    }
+
+    public function selectedTemplate()
+    {
+        return $this->belongsTo(PhotoTemplate::class, 'selected_template_id');
+    }
+
+    public function addons()
+    {
+        return $this->belongsToMany(Addon::class, 'booking_addons')
+            ->withPivot('quantity', 'price')
+            ->withTimestamps();
     }
 
     public function approvedBy()
@@ -55,8 +76,8 @@ class Booking extends Model
         return $this->belongsTo(Availability::class);
     }
 
-    public function payment()
+    public function payments()
     {
-        return $this->hasOne(Payment::class);
+        return $this->hasMany(Payment::class);
     }
 }

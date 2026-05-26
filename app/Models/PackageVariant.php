@@ -1,0 +1,31 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class PackageVariant extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'service_package_id',
+        'name',
+        'duration_hours',
+        'print_limit',
+        'price',
+        'extra_hour_price',
+        'is_unlimited',
+    ];
+
+    public function servicePackage()
+    {
+        return $this->belongsTo(ServicePackage::class);
+    }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
+    }
+}

@@ -23,8 +23,18 @@ Route::get('/packages/{id}', [PackageController::class, 'show']);
 Route::get('/availabilities', [AvailabilityController::class, 'index']); // Get slots
 
 Route::post('/bookings', [BookingController::class, 'store']); // Guest booking
+Route::post('/bookings/payment-proof', [BookingController::class, 'uploadProof']); // Guest uploads payment proof
+
+Route::get('/addons', function () {
+    return response()->json(['data' => \App\Models\Addon::where('is_active', true)->get()]);
+});
+
+Route::get('/photo-templates', function () {
+    return response()->json(['data' => \App\Models\PhotoTemplate::where('is_active', true)->get()]);
+});
 
 Route::get('/rental-equipments', [RentalEquipmentController::class, 'index']);
 Route::get('/rental-equipments/{id}', [RentalEquipmentController::class, 'show']);
 
 Route::post('/rental-requests', [RentalRequestController::class, 'store']); // Guest rental
+

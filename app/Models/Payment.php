@@ -12,14 +12,22 @@ class Payment extends Model
     protected $fillable = [
         'booking_id',
         'amount',
+        'payment_type',
         'payment_method',
         'proof_image',
         'status',
+        'verified_by',
+        'verified_at',
         'paid_at',
     ];
 
     public function booking()
     {
         return $this->belongsTo(Booking::class);
+    }
+
+    public function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
 }
