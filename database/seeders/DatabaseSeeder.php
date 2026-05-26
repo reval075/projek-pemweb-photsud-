@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         // 0. Default Admin User
         \App\Models\User::firstOrCreate(
-            ['email' => 'admin@memforia.com'],
+            ['email' => 'admin@memoforia.com'],
             [
                 'name' => 'Admin Memoforia',
                 'password' => \Illuminate\Support\Facades\Hash::make('password'),
@@ -104,7 +104,7 @@ class DatabaseSeeder extends Seeder
         // 5. Availabilities (Sample slots for today and tomorrow)
         $today = Carbon::today();
         $tomorrow = Carbon::tomorrow();
-        
+
         $slots = [
             ['10:00:00', '11:00:00'],
             ['11:00:00', '12:00:00'],
