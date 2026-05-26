@@ -42,4 +42,21 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
+
+    // Admin Booking Management
+    Route::get('/admin/api/bookings', [\App\Http\Controllers\BookingController::class, 'adminIndex']);
+    Route::post('/admin/api/bookings/{id}/approve', [\App\Http\Controllers\BookingController::class, 'approve']);
+    Route::post('/admin/api/bookings/{id}/reject', [\App\Http\Controllers\BookingController::class, 'reject']);
+    Route::post('/admin/api/bookings/{id}/status', [\App\Http\Controllers\BookingController::class, 'updateStatus']);
+
+    // Admin Service Packages CRUD
+    Route::get('/admin/api/service-packages', [\App\Http\Controllers\PackageController::class, 'adminIndex']);
+    Route::post('/admin/api/service-packages', [\App\Http\Controllers\PackageController::class, 'store']);
+    Route::put('/admin/api/service-packages/{id}', [\App\Http\Controllers\PackageController::class, 'update']);
+    Route::delete('/admin/api/service-packages/{id}', [\App\Http\Controllers\PackageController::class, 'destroy']);
+
+    // Admin Calendar / Blocked Dates
+    Route::get('/admin/api/unavailable-dates', [\App\Http\Controllers\AvailabilityController::class, 'adminUnavailableIndex']);
+    Route::post('/admin/api/unavailable-dates', [\App\Http\Controllers\AvailabilityController::class, 'storeUnavailableDate']);
+    Route::delete('/admin/api/unavailable-dates/{date}', [\App\Http\Controllers\AvailabilityController::class, 'deleteUnavailableDate']);
 });

@@ -73,6 +73,35 @@ class DatabaseSeeder extends Seeder
             'description' => '4 Lembar cetak + Softcopy + GIF Animation',
         ]);
 
+        // 3a. Service Packages
+        \App\Models\ServicePackage::create([
+            'name' => 'Wedding Photobooth',
+            'price' => 3500000,
+            'duration' => '6 Jam',
+            'description' => 'Unlimited prints for 6 hours, professional lighting, custom photo frame layout, 1 photographer + 1 assistant.',
+        ]);
+
+        \App\Models\ServicePackage::create([
+            'name' => 'Graduation / Wisuda',
+            'price' => 2000000,
+            'duration' => '4 Jam',
+            'description' => 'Unlimited prints for 4 hours, basic studio setup, softcopy digital link, 1 photographer.',
+        ]);
+
+        \App\Models\ServicePackage::create([
+            'name' => 'Birthday Party',
+            'price' => 1500000,
+            'duration' => '3 Jam',
+            'description' => 'Unlimited prints for 3 hours, fun props, digital files share link, 1 assistant.',
+        ]);
+
+        \App\Models\ServicePackage::create([
+            'name' => 'Corporate Event',
+            'price' => 5000000,
+            'duration' => '8 Jam',
+            'description' => 'Unlimited prints for 8 hours, custom backdrop branding, high-speed printer, 2 staff members.',
+        ]);
+
         // 4. Rental Equipments
         RentalEquipment::create([
             'name' => 'Kamera Canon EOS R5',
