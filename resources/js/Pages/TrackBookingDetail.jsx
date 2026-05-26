@@ -19,6 +19,7 @@ import PaymentProofUpload from '../components/PaymentProofUpload';
 import {
     formatCurrency,
     formatDateTime,
+    getDpCountdown,
     getPaymentStatusLabel,
     getPaymentVerificationStyle,
     getStatusLabel,
@@ -60,6 +61,8 @@ export default function TrackBookingDetail() {
     const [checking, setChecking] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [fetchError, setFetchError] = useState('');
+    const [dpCountdown, setDpCountdown] = useState(null);
+    const [clientDpExpired, setClientDpExpired] = useState(false);
 
     const loadSession = useCallback(() => {
         const raw = sessionStorage.getItem(TRACKING_SESSION_KEY);
@@ -133,6 +136,30 @@ export default function TrackBookingDetail() {
         }
     };
 
+    // Frontend-only DP countdown (per-minute). Backend remains source of truth.
+    // Hook MUST run on every render (no conditional placement).
+    useEffect(() => {
+        const status = session?.data?.status;
+        const dpExpiredAt = session?.data?.dp_expired_at;
+
+        if (status !== 'waiting_dp' || !dpExpiredAt) {
+            setDpCountdown(null);
+            setClientDpExpired(false);
+            return;
+        }
+
+        const update = () => {
+            const result = getDpCountdown(dpExpiredAt);
+            setDpCountdown(result.text);
+            setClientDpExpired(result.isExpired);
+        };
+
+        update();
+        const intervalId = window.setInterval(update, 60 * 1000);
+
+        return () => window.clearInterval(intervalId);
+    }, [session?.data?.status, session?.data?.dp_expired_at]);
+
     if (checking) {
         return (
             <GuestLayout>
@@ -164,6 +191,7 @@ export default function TrackBookingDetail() {
     const canShowUploadSection =
         booking.can_upload_proof &&
         !booking.is_dp_expired &&
+        !clientDpExpired &&
         !['expired', 'cancelled', 'rejected', 'completed'].includes(booking.status);
 
     const hasPendingPayment = payments.some((p) => p.status === 'pending');
@@ -220,13 +248,20 @@ export default function TrackBookingDetail() {
                         )}
 
                         {booking.status === 'waiting_dp' && booking.dp_expired_at && (
-                            <p className="text-xs font-semibold text-blue-600 mt-3 flex items-center gap-1">
-                                <Clock size={14} />
-                                Batas pembayaran DP: {formatDateTime(booking.dp_expired_at)}
-                            </p>
+                            <div className="mt-3 space-y-1">
+                                <p className={`text-xs font-semibold flex items-center gap-1 ${clientDpExpired ? 'text-orange-600' : 'text-blue-600'}`}>
+                                    <Clock size={14} />
+                                    Batas pembayaran DP: {formatDateTime(booking.dp_expired_at)}
+                                </p>
+                                {dpCountdown && (
+                                    <p className={`text-xs font-semibold ${clientDpExpired ? 'text-orange-600' : 'text-blue-600'}`}>
+                                        {dpCountdown}
+                                    </p>
+                                )}
+                            </div>
                         )}
 
-                        {booking.status === 'expired' && (
+                        {(booking.status === 'expired' || clientDpExpired) && (
                             <p className="text-xs font-semibold text-orange-600 mt-3 flex items-center gap-1">
                                 <AlertCircle size={14} />
                                 Booking ini telah kedaluwarsa karena batas waktu DP terlewati.

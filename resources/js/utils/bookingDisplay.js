@@ -105,3 +105,34 @@ export const getStatusMessage = (booking) => {
             return null;
     }
 };
+
+/**
+ * Lightweight countdown for DP deadline display (frontend-only).
+ * Updates should run on an interval in the UI layer.
+ */
+export const getDpCountdown = (dpExpiredAt) => {
+    if (!dpExpiredAt) {
+        return { isExpired: false, text: null, minutesLeft: null };
+    }
+
+    const expiry = new Date(dpExpiredAt);
+    if (Number.isNaN(expiry.getTime())) {
+        return { isExpired: false, text: null, minutesLeft: null };
+    }
+
+    const diffMs = expiry.getTime() - Date.now();
+    const minutesLeft = Math.ceil(diffMs / (1000 * 60));
+
+    if (minutesLeft <= 0) {
+        return { isExpired: true, text: 'DP Expired', minutesLeft: 0 };
+    }
+
+    const hours = Math.floor(minutesLeft / 60);
+    const mins = minutesLeft % 60;
+
+    if (hours <= 0) {
+        return { isExpired: false, text: `Sisa waktu pembayaran DP: ${mins} menit`, minutesLeft };
+    }
+
+    return { isExpired: false, text: `Sisa waktu pembayaran DP: ${hours} jam ${mins} menit`, minutesLeft };
+};

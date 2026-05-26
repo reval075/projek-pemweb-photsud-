@@ -548,6 +548,7 @@ class BookingTest extends TestCase
 
         $response = $this->postJson('/api/bookings/payment-proof', [
             'booking_code' => 'MEMO-20260602-EXPUP',
+            'contact' => 'john@example.com',
             'amount' => 1000000,
             'payment_type' => 'dp',
             'payment_method' => 'Bank Transfer',
@@ -574,6 +575,7 @@ class BookingTest extends TestCase
 
         $response = $this->postJson('/api/bookings/payment-proof', [
             'booking_code' => 'MEMO-20260602-DPEXP',
+            'contact' => 'john@example.com',
             'amount' => 1000000,
             'payment_type' => 'dp',
             'payment_method' => 'Bank Transfer',
