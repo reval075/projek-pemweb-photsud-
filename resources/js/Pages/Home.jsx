@@ -2,6 +2,7 @@ import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Star, Camera, Sparkles } from 'lucide-react';
+import InteractiveHangingCamera from '@/components/booking-session/InteractiveHangingCamera';
 
 const testimonialPhotos = [
     { src: 'https://fotoshare.co/i/2wxtc51', alt: 'Photo Session 1' },
@@ -39,11 +40,11 @@ export default function Home() {
                     </motion.div>
                     
                     <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.6 }} className="text-lg md:text-xl text-slate max-w-2xl mx-auto mb-10 font-light">
-                        A premium photography studio and photobooth experience designed for elegance and timeless memories.
+                        A premium photobooth experience designed for elegance and timeless memories.
                     </motion.p>
 
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.8 }} className="flex flex-col sm:flex-row justify-center gap-4">
-                        <Link href="/booking" className="group flex items-center justify-center space-x-3 bg-primary text-white px-8 py-4 rounded-full hover:bg-primary-dark transition-all duration-300 shadow-lg shadow-primary/30">
+                        <Link href="/booking-session" className="group flex items-center justify-center space-x-3 bg-primary text-white px-8 py-4 rounded-full hover:bg-primary-dark transition-all duration-300 shadow-lg shadow-primary/30">
                             <span className="uppercase tracking-widest text-sm font-medium">Book Now</span>
                             <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                         </Link>
@@ -108,7 +109,7 @@ export default function Home() {
                         <p className="text-slate text-lg font-light max-w-xl mx-auto">Tailored photography experiences for every occasion</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <Link href="/booking" className="group block relative overflow-hidden h-[500px] rounded-2xl">
+                        <Link href="/booking-session" className="group block relative overflow-hidden h-[500px] rounded-2xl">
                             <img src="https://images.unsplash.com/photo-1520110120835-c96534a4c984?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Photobooth" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"/>
                             <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-charcoal/20 to-transparent group-hover:from-charcoal/80 transition-colors duration-500"></div>
                             <div className="absolute bottom-10 left-10 text-white">
@@ -152,20 +153,52 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* CTA Section */}
-            <section className="py-24 bg-gradient-to-r from-primary to-primary-dark text-white">
-                <div className="max-w-4xl mx-auto px-6 text-center">
+            {/* CTA Section — interactive camera */}
+            <section id="interactive-camera" className="py-20 md:py-28 bg-gradient-to-r from-primary to-primary-dark text-white relative overflow-hidden scroll-mt-24">
+                <div className="absolute inset-0 opacity-20">
+                    <div className="absolute top-0 left-1/4 w-64 h-64 rounded-full bg-white/30 blur-3xl" />
+                    <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-accent/20 blur-3xl" />
+                </div>
+                <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
                     <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-                        <h2 className="text-4xl md:text-5xl font-serif mb-6">Ready to Create Memories?</h2>
-                        <p className="text-white/80 text-lg mb-10 font-light max-w-xl mx-auto">Book your photobooth session today and let us help you capture moments that last forever.</p>
-                        <div className="flex flex-col sm:flex-row justify-center gap-4">
-                            <Link href="/booking" className="bg-white text-primary-dark px-10 py-4 rounded-full hover:bg-off-white transition-all duration-300 uppercase tracking-widest text-sm font-medium shadow-lg">
-                                Book a Session
-                            </Link>
-                            <Link href="/branches" className="border-2 border-white/30 text-white px-10 py-4 rounded-full hover:bg-white/10 transition-all duration-300 uppercase tracking-widest text-sm font-medium">
-                                Find a Branch
-                            </Link>
-                        </div>
+                        <h2 className="text-4xl md:text-5xl font-serif mb-4">Ready to Create Memories?</h2>
+                        <p className="text-white/80 text-lg mb-6 font-light max-w-xl mx-auto">
+                            Book your photobooth session today and let us help you capture moments that last forever.
+                        </p>
+                        <p className="text-white/60 text-sm mb-8 font-light">
+                            Tekan shutter pada kamera untuk membuka sesi booking
+                        </p>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 24 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.15, duration: 0.7 }}
+                        className="mb-10"
+                    >
+                        <InteractiveHangingCamera redirectTo="/booking" variant="light" />
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.25 }}
+                        className="flex flex-col sm:flex-row justify-center gap-4"
+                    >
+                        <Link
+                            href="/booking-session"
+                            className="bg-white text-primary-dark px-10 py-4 rounded-full hover:bg-off-white transition-all duration-300 uppercase tracking-widest text-sm font-medium shadow-lg"
+                        >
+                            Book a Session
+                        </Link>
+                        <Link
+                            href="/branches"
+                            className="border-2 border-white/30 text-white px-10 py-4 rounded-full hover:bg-white/10 transition-all duration-300 uppercase tracking-widest text-sm font-medium"
+                        >
+                            Find a Branch
+                        </Link>
                     </motion.div>
                 </div>
             </section>

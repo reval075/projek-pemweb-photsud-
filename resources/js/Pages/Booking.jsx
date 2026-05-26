@@ -23,7 +23,7 @@ function StepIndicator({ current, steps }) {
     );
 }
 
-export default function Booking() {
+export default function Booking({ initialDate = null }) {
     const [step, setStep] = useState(0);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -84,6 +84,17 @@ export default function Booking() {
             })
             .catch(() => setError('Gagal memuat jadwal ketersediaan.'));
     }, [year, month]);
+
+    // Pre-select date from booking-session redirect
+    useEffect(() => {
+        if (!initialDate || typeof initialDate !== 'string') return;
+        const parsed = new Date(initialDate + 'T12:00:00');
+        if (Number.isNaN(parsed.getTime())) return;
+        setSelectedDate(parsed);
+        setCurrentDate(new Date(parsed.getFullYear(), parsed.getMonth(), 1));
+        updateForm('event_date', initialDate);
+        setStep(1);
+    }, [initialDate]);
 
     // Fetch packages, addons, and templates on mount
     useEffect(() => {
