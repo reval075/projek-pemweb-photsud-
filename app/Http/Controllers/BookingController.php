@@ -251,6 +251,11 @@ class BookingController extends Controller
 
         $booking = Booking::where('booking_code', $validated['booking_code'])->firstOrFail();
 
+        // Realtime expiration sync: do not rely only on scheduler.
+        if ($booking->markAsExpiredIfDpElapsed()) {
+            $booking->refresh();
+        }
+
         // Guard: reject upload for expired/cancelled/rejected bookings
         if (in_array($booking->status, ['expired', 'cancelled', 'rejected', 'completed'])) {
             return response()->json([

@@ -387,6 +387,38 @@ class BookingTest extends TestCase
     }
 
     /**
+     * Test: upload proof is rejected when waiting_dp booking has passed dp_expired_at
+     * even before scheduler runs.
+     */
+    public function test_cannot_upload_proof_when_waiting_dp_has_passed_dp_deadline(): void
+    {
+        $entities = $this->createBaseEntities();
+
+        $booking = $this->createBooking($entities, [
+            'booking_code' => 'MEMO-20260602-DPEXP',
+            'status' => 'waiting_dp',
+            'dp_expired_at' => now()->subMinute(),
+        ]);
+
+        $response = $this->postJson('/api/bookings/payment-proof', [
+            'booking_code' => 'MEMO-20260602-DPEXP',
+            'amount' => 1000000,
+            'payment_type' => 'dp',
+            'payment_method' => 'Bank Transfer',
+            'proof_image' => 'proof.png',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonFragment(['success' => false]);
+        $response->assertJsonFragment(['message' => 'Booking ini sudah expired dan tidak dapat menerima pembayaran.']);
+
+        // Scheduler independence: booking is guarded and synchronized immediately.
+        $booking->refresh();
+        $this->assertEquals('expired', $booking->status);
+        $this->assertNotNull($booking->cancelled_at);
+    }
+
+    /**
      * Test: expired bookings do NOT lock calendar dates.
      */
     public function test_expired_booking_does_not_lock_calendar(): void

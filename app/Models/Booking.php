@@ -53,6 +53,36 @@ class Booking extends Model
                      ->where('dp_expired_at', '<=', now());
     }
 
+    /**
+     * Source of truth: a booking is DP-expired when it is still waiting_dp
+     * and the deadline has passed.
+     */
+    public function isDpExpired(): bool
+    {
+        return $this->status === 'waiting_dp'
+            && $this->dp_expired_at !== null
+            && now()->gt($this->dp_expired_at);
+    }
+
+    /**
+     * Synchronize status when a booking is already expired by time.
+     * Returns true when status is changed in this call.
+     */
+    public function markAsExpiredIfDpElapsed(): bool
+    {
+        if (! $this->isDpExpired()) {
+            return false;
+        }
+
+        $this->update([
+            'status' => 'expired',
+            'cancelled_at' => $this->cancelled_at ?? now(),
+            'notes' => 'Otomatis expired karena batas waktu pembayaran DP telah habis.',
+        ]);
+
+        return true;
+    }
+
     public function servicePackage()
     {
         return $this->belongsTo(ServicePackage::class, 'service_package_id');
