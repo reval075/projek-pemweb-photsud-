@@ -285,6 +285,71 @@ class BookingController extends Controller
     }
 
     /**
+     * Admin: manual booking status update.
+     *
+     * This route exists in routes/web.php, so controller must implement it
+     * to prevent production 500 errors.
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'status' => 'required|string|in:pending_approval,waiting_dp,confirmed,completed,cancelled,expired,rejected',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            $booking = DB::transaction(function () use ($id, $validated) {
+                $booking = Booking::lockForUpdate()->findOrFail($id);
+
+                $booking->status = $validated['status'];
+
+                if (in_array($booking->status, ['cancelled', 'expired', 'rejected'], true)) {
+                    $booking->cancelled_at = now();
+                    if ($booking->status === 'rejected') {
+                        $booking->notes = $validated['notes'] ?? $booking->notes;
+                    }
+                }
+
+                if ($booking->status === 'waiting_dp') {
+                    // Ensure deadline exists if admin manually sets waiting_dp.
+                    if (! $booking->dp_expired_at) {
+                        $expirationHours = config('booking.dp_expiration_hours', 12);
+                        $booking->dp_expired_at = now()->addHours($expirationHours);
+                    }
+                }
+
+                if ($booking->status === 'confirmed') {
+                    if (! $booking->confirmed_at) {
+                        $booking->confirmed_at = now();
+                    }
+                }
+
+                if ($booking->status === 'completed') {
+                    // Keep confirmed_at if set; no special requirements here.
+                }
+
+                $booking->save();
+
+                return $booking->fresh();
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status booking berhasil diperbarui.',
+                'data' => $booking,
+                'errors' => null,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null,
+                'errors' => null,
+            ], 422);
+        }
+    }
+
+    /**
      * Guest uploads a payment proof (DP or Settlement).
      *
      * Guards against expired/cancelled/rejected bookings.
