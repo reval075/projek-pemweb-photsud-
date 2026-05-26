@@ -337,9 +337,17 @@ class BookingController extends Controller
                 // 2. Lock the booking row — prevents concurrent state changes
                 $booking = Booking::lockForUpdate()->findOrFail($payment->booking_id);
 
-                // Guard: reject verification for expired/cancelled bookings
+                // Realtime expiration sync inside transaction after lock.
+                if ($booking->markAsExpiredIfDpElapsed()) {
+                    $booking->refresh();
+                }
+
+                // Guard: reject verification for expired/cancelled bookings.
+                // Use non-exception early return so realtime expiration sync can be committed.
                 if (in_array($booking->status, ['expired', 'cancelled', 'rejected'])) {
-                    throw new \Exception('Booking sudah ' . $booking->status . ' dan tidak dapat diverifikasi.');
+                    return [
+                        'error' => 'Booking sudah ' . $booking->status . ' dan tidak dapat diverifikasi.',
+                    ];
                 }
 
                 // 3. Verify the payment
@@ -398,6 +406,15 @@ class BookingController extends Controller
 
                 return $payment->fresh()->load('booking');
             });
+
+            if (is_array($result) && isset($result['error'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['error'],
+                    'data' => null,
+                    'errors' => null,
+                ], 422);
+            }
 
             return response()->json([
                 'success' => true,

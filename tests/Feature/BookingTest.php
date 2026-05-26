@@ -363,6 +363,81 @@ class BookingTest extends TestCase
     }
 
     /**
+     * Test: cannot verify DP payment when waiting_dp has passed dp_expired_at
+     * even before scheduler runs.
+     */
+    public function test_cannot_verify_dp_payment_when_waiting_dp_has_passed_deadline(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $entities = $this->createBaseEntities();
+
+        $booking = $this->createBooking($entities, [
+            'booking_code' => 'MEMO-20260602-VDPXP',
+            'status' => 'waiting_dp',
+            'dp_expired_at' => now()->subMinute(),
+        ]);
+
+        $payment = Payment::create([
+            'booking_id' => $booking->id,
+            'amount' => 1000000,
+            'payment_type' => 'dp',
+            'payment_method' => 'Bank Transfer',
+            'proof_image' => 'proof.png',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->postJson("/admin/api/payments/{$payment->id}/verify", [
+            'status' => 'verified',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonFragment(['success' => false]);
+        $response->assertJsonFragment(['message' => 'Booking sudah expired dan tidak dapat diverifikasi.']);
+
+        // Scheduler independence: verify flow synchronizes expiration in realtime.
+        $booking->refresh();
+        $this->assertEquals('expired', $booking->status);
+        $this->assertNotNull($booking->cancelled_at);
+        $this->assertEquals('pending', $payment->fresh()->status);
+    }
+
+    /**
+     * Test: settlement/full payment branch uses same expiration guard.
+     */
+    public function test_cannot_verify_settlement_payment_when_waiting_dp_has_passed_deadline(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $entities = $this->createBaseEntities();
+
+        $booking = $this->createBooking($entities, [
+            'booking_code' => 'MEMO-20260602-VSTXP',
+            'status' => 'waiting_dp',
+            'dp_expired_at' => now()->subMinute(),
+        ]);
+
+        $payment = Payment::create([
+            'booking_id' => $booking->id,
+            'amount' => 2500000,
+            'payment_type' => 'settlement',
+            'payment_method' => 'Bank Transfer',
+            'proof_image' => 'proof-settlement.png',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->postJson("/admin/api/payments/{$payment->id}/verify", [
+            'status' => 'verified',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonFragment(['success' => false]);
+        $response->assertJsonFragment(['message' => 'Booking sudah expired dan tidak dapat diverifikasi.']);
+
+        $booking->refresh();
+        $this->assertEquals('expired', $booking->status);
+        $this->assertEquals('pending', $payment->fresh()->status);
+    }
+
+    /**
      * Test: cannot upload payment proof for expired booking.
      */
     public function test_cannot_upload_proof_for_expired_booking(): void
