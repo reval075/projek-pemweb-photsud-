@@ -393,14 +393,43 @@ class BookingController extends Controller
                         ]);
 
                 } elseif ($payment->payment_type === 'settlement' || $payment->payment_type === 'full_payment') {
+                    // Settlement/full payment can only be processed on active booking flows.
+                    if (! in_array($booking->status, ['waiting_dp', 'confirmed'])) {
+                        throw new \Exception('Booking tidak dalam status valid untuk verifikasi settlement/full payment.');
+                    }
+
+                    // If this payment would confirm the booking, enforce the same date-conflict protection.
+                    if ($booking->status !== 'confirmed') {
+                        $conflictExists = Booking::where('event_date', $booking->event_date)
+                            ->where('id', '!=', $booking->id)
+                            ->whereIn('status', ['confirmed', 'completed'])
+                            ->lockForUpdate()
+                            ->exists();
+
+                        if ($conflictExists) {
+                            throw new \Exception('Tanggal ini sudah dikonfirmasi oleh booking lain. Tidak dapat melakukan konfirmasi.');
+                        }
+                    }
+
                     $booking->update([
                         'payment_status' => 'paid',
                     ]);
+
                     if ($booking->status !== 'confirmed') {
                         $booking->update([
                             'status' => 'confirmed',
                             'confirmed_at' => now(),
                         ]);
+
+                        // Keep competing-booking handling consistent with DP confirmation.
+                        Booking::where('event_date', $booking->event_date)
+                            ->where('id', '!=', $booking->id)
+                            ->whereIn('status', ['pending_approval', 'waiting_dp'])
+                            ->update([
+                                'status' => 'cancelled',
+                                'cancelled_at' => now(),
+                                'notes' => 'Otomatis dibatalkan karena pelanggan lain telah menyelesaikan pembayaran terlebih dahulu pada tanggal ini.'
+                            ]);
                     }
                 }
 

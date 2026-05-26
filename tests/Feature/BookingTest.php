@@ -438,6 +438,86 @@ class BookingTest extends TestCase
     }
 
     /**
+     * Test: settlement/full payment cannot bypass invalid booking state transitions.
+     */
+    public function test_cannot_verify_settlement_for_pending_approval_booking(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $entities = $this->createBaseEntities();
+
+        $booking = $this->createBooking($entities, [
+            'booking_code' => 'MEMO-20260602-STPEN',
+            'status' => 'pending_approval',
+        ]);
+
+        $payment = Payment::create([
+            'booking_id' => $booking->id,
+            'amount' => 2500000,
+            'payment_type' => 'settlement',
+            'payment_method' => 'Bank Transfer',
+            'proof_image' => 'proof-settlement.png',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->postJson("/admin/api/payments/{$payment->id}/verify", [
+            'status' => 'verified',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonFragment(['success' => false]);
+        $response->assertJsonFragment(['message' => 'Booking tidak dalam status valid untuk verifikasi settlement/full payment.']);
+
+        $this->assertEquals('pending_approval', $booking->fresh()->status);
+        $this->assertEquals('pending', $payment->fresh()->status);
+    }
+
+    /**
+     * Test: full_payment confirmation keeps competing booking protection consistent.
+     */
+    public function test_admin_verifies_full_payment_which_confirms_and_cancels_competing_bookings(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $entities = $this->createBaseEntities();
+
+        $bookingA = $this->createBooking($entities, [
+            'booking_code' => 'MEMO-20260602-FULLA',
+            'status' => 'waiting_dp',
+            'dp_expired_at' => now()->addHours(12),
+        ]);
+
+        $bookingB = $this->createBooking($entities, [
+            'booking_code' => 'MEMO-20260602-FULLB',
+            'customer_name' => 'Competing User',
+            'customer_email' => 'competing@example.com',
+            'event_name' => 'Competing Event',
+            'status' => 'waiting_dp',
+            'dp_expired_at' => now()->addHours(12),
+        ]);
+
+        $payment = Payment::create([
+            'booking_id' => $bookingA->id,
+            'amount' => 3500000,
+            'payment_type' => 'full_payment',
+            'payment_method' => 'Bank Transfer',
+            'proof_image' => 'full-payment.png',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($admin)->postJson("/admin/api/payments/{$payment->id}/verify", [
+            'status' => 'verified',
+        ]);
+
+        $response->assertStatus(200);
+
+        $this->assertEquals('confirmed', $bookingA->fresh()->status);
+        $this->assertEquals('paid', $bookingA->fresh()->payment_status);
+        $this->assertNotNull($bookingA->fresh()->confirmed_at);
+
+        $this->assertEquals('cancelled', $bookingB->fresh()->status);
+        $this->assertStringContainsString('Otomatis dibatalkan', $bookingB->fresh()->notes);
+    }
+
+    /**
      * Test: cannot upload payment proof for expired booking.
      */
     public function test_cannot_upload_proof_for_expired_booking(): void
