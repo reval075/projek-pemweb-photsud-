@@ -26,6 +26,7 @@ class Booking extends Model
         'approved_by',
         'approved_at',
         'confirmed_at',
+        'dp_expired_at',
         'payment_status',
         'cancelled_at',
         'total_price',
@@ -33,6 +34,24 @@ class Booking extends Model
         'branch_id',
         'availability_id',
     ];
+
+    protected $casts = [
+        'event_datetime' => 'datetime',
+        'approved_at' => 'datetime',
+        'confirmed_at' => 'datetime',
+        'dp_expired_at' => 'datetime',
+        'cancelled_at' => 'datetime',
+    ];
+
+    /**
+     * Scope: bookings that have passed their DP payment deadline.
+     */
+    public function scopeExpiredDp($query)
+    {
+        return $query->where('status', 'waiting_dp')
+                     ->whereNotNull('dp_expired_at')
+                     ->where('dp_expired_at', '<=', now());
+    }
 
     public function servicePackage()
     {

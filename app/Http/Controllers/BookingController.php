@@ -43,7 +43,12 @@ class BookingController extends Controller
 
         // 1. Check manual blocks
         if (UnavailableDate::where('date', $eventDate)->exists()) {
-            return response()->json(['message' => 'Tanggal ini tidak tersedia untuk pemesanan.'], 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Tanggal ini tidak tersedia untuk pemesanan.',
+                'data' => null,
+                'errors' => null,
+            ], 422);
         }
 
         // 2. Check if date has been reserved (confirmed/completed bookings)
@@ -51,13 +56,23 @@ class BookingController extends Controller
             ->whereIn('status', ['confirmed', 'completed'])
             ->exists();
         if ($isReserved) {
-            return response()->json(['message' => 'Tanggal ini sudah dipesan (reserved) oleh pelanggan lain.'], 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Tanggal ini sudah dipesan (reserved) oleh pelanggan lain.',
+                'data' => null,
+                'errors' => null,
+            ], 422);
         }
 
         // 3. Compute price
         $variant = PackageVariant::findOrFail($validated['package_variant_id']);
         if ($variant->service_package_id != $validated['service_package_id']) {
-            return response()->json(['message' => 'Varian paket tidak cocok dengan paket jasa yang dipilih.'], 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Varian paket tidak cocok dengan paket jasa yang dipilih.',
+                'data' => null,
+                'errors' => null,
+            ], 422);
         }
 
         $totalPrice = $variant->price;
@@ -109,8 +124,10 @@ class BookingController extends Controller
         });
 
         return response()->json([
+            'success' => true,
             'message' => 'Pengajuan booking berhasil diajukan! Silakan tunggu approval admin.',
             'data' => $booking->load(['servicePackage', 'packageVariant', 'selectedTemplate', 'addons']),
+            'errors' => null,
         ], 201);
     }
 
@@ -132,35 +149,60 @@ class BookingController extends Controller
 
     /**
      * Approve a booking (Waiting DP).
+     *
+     * Transaction-safe: uses lockForUpdate to prevent race conditions
+     * when two admins approve bookings on the same date simultaneously.
      */
     public function approve(Request $request, $id)
     {
-        $booking = Booking::findOrFail($id);
+        try {
+            $booking = DB::transaction(function () use ($id) {
+                // Lock the booking row to prevent concurrent modifications
+                $booking = Booking::lockForUpdate()->findOrFail($id);
 
-        if ($booking->status !== 'pending_approval') {
-            return response()->json(['message' => 'Booking tidak berstatus pending approval.'], 422);
+                if ($booking->status !== 'pending_approval') {
+                    throw new \Exception('Booking tidak berstatus pending approval.');
+                }
+
+                // Lock and check if date has been reserved/locked in the meantime
+                $isReserved = Booking::where('event_date', $booking->event_date)
+                    ->where('id', '!=', $booking->id)
+                    ->whereIn('status', ['confirmed', 'completed'])
+                    ->lockForUpdate()
+                    ->exists();
+
+                if ($isReserved) {
+                    throw new \Exception('Tanggal ini sudah dipesan/confirmed oleh event lain.');
+                }
+
+                // Calculate DP expiration deadline
+                $expirationHours = config('booking.dp_expiration_hours', 12);
+                $dpExpiredAt = now()->addHours($expirationHours);
+
+                $booking->update([
+                    'status' => 'waiting_dp',
+                    'approved_by' => Auth::id(),
+                    'approved_at' => now(),
+                    'dp_expired_at' => $dpExpiredAt,
+                ]);
+
+                return $booking->fresh();
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Booking disetujui! Menunggu pembayaran DP dari pelanggan (batas waktu: ' . $booking->dp_expired_at->format('d M Y H:i') . ').',
+                'data' => $booking,
+                'errors' => null,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null,
+                'errors' => null,
+            ], 422);
         }
-
-        // Double check if date has been reserved/locked in the meantime
-        $isReserved = Booking::where('event_date', $booking->event_date)
-            ->where('id', '!=', $booking->id)
-            ->whereIn('status', ['confirmed', 'completed'])
-            ->exists();
-
-        if ($isReserved) {
-            return response()->json(['message' => 'Tanggal ini sudah dipesan/confirmed oleh event lain.'], 422);
-        }
-
-        $booking->update([
-            'status' => 'waiting_dp',
-            'approved_by' => Auth::id(),
-            'approved_at' => now(),
-        ]);
-
-        return response()->json([
-            'message' => 'Booking disetujui! Menunggu pembayaran DP dari pelanggan.',
-            'data' => $booking
-        ]);
     }
 
     /**
@@ -171,7 +213,12 @@ class BookingController extends Controller
         $booking = Booking::findOrFail($id);
 
         if ($booking->status !== 'pending_approval') {
-            return response()->json(['message' => 'Hanya booking pending yang dapat ditolak.'], 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya booking pending yang dapat ditolak.',
+                'data' => null,
+                'errors' => null,
+            ], 422);
         }
 
         $booking->update([
@@ -180,13 +227,17 @@ class BookingController extends Controller
         ]);
 
         return response()->json([
+            'success' => true,
             'message' => 'Booking berhasil ditolak.',
-            'data' => $booking
+            'data' => $booking,
+            'errors' => null,
         ]);
     }
 
     /**
      * Guest uploads a payment proof (DP or Settlement).
+     *
+     * Guards against expired/cancelled/rejected bookings.
      */
     public function uploadProof(Request $request)
     {
@@ -200,6 +251,16 @@ class BookingController extends Controller
 
         $booking = Booking::where('booking_code', $validated['booking_code'])->firstOrFail();
 
+        // Guard: reject upload for expired/cancelled/rejected bookings
+        if (in_array($booking->status, ['expired', 'cancelled', 'rejected', 'completed'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking ini sudah ' . $booking->status . ' dan tidak dapat menerima pembayaran.',
+                'data' => null,
+                'errors' => null,
+            ], 422);
+        }
+
         $payment = Payment::create([
             'booking_id' => $booking->id,
             'amount' => $validated['amount'],
@@ -210,78 +271,143 @@ class BookingController extends Controller
         ]);
 
         return response()->json([
+            'success' => true,
             'message' => 'Bukti pembayaran berhasil diunggah dan sedang ditinjau admin.',
-            'data' => $payment
+            'data' => $payment,
+            'errors' => null,
         ], 201);
     }
 
     /**
      * Verify a payment record (Admin).
+     *
+     * Transaction-safe with pessimistic locking:
+     * - lockForUpdate on payment prevents double verification
+     * - lockForUpdate on booking prevents concurrent state changes
+     * - lockForUpdate on same-date bookings prevents double confirmation
      */
     public function verifyPayment(Request $request, $id)
     {
-        $payment = Payment::findOrFail($id);
-        $booking = $payment->booking;
-
         $validated = $request->validate([
             'status' => 'required|in:verified,rejected',
         ]);
 
-        if ($payment->status !== 'pending') {
-            return response()->json(['message' => 'Pembayaran ini sudah diverifikasi sebelumnya.'], 422);
-        }
-
+        // Handle rejection outside transaction (simpler, no race condition risk)
         if ($validated['status'] === 'rejected') {
+            $payment = Payment::findOrFail($id);
+
+            if ($payment->status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Pembayaran ini sudah diverifikasi sebelumnya.',
+                    'data' => null,
+                    'errors' => null,
+                ], 422);
+            }
+
             $payment->update([
                 'status' => 'rejected',
                 'verified_by' => Auth::id(),
                 'verified_at' => now(),
             ]);
-            return response()->json(['message' => 'Pembayaran berhasil ditolak.', 'data' => $payment]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pembayaran berhasil ditolak.',
+                'data' => $payment,
+                'errors' => null,
+            ]);
         }
 
-        DB::transaction(function () use ($payment, $booking) {
-            $payment->update([
-                'status' => 'verified',
-                'verified_by' => Auth::id(),
-                'verified_at' => now(),
-                'paid_at' => now(),
-            ]);
+        // Verification flow with pessimistic locking
+        try {
+            $result = DB::transaction(function () use ($id) {
+                // 1. Lock the payment row — prevents double verification
+                $payment = Payment::lockForUpdate()->findOrFail($id);
 
-            // Update Booking status & lock calendar
-            if ($payment->payment_type === 'dp') {
-                $booking->update([
-                    'status' => 'confirmed',
-                    'confirmed_at' => now(),
-                    'payment_status' => 'partially_paid',
+                if ($payment->status !== 'pending') {
+                    throw new \Exception('Pembayaran ini sudah diverifikasi sebelumnya.');
+                }
+
+                // 2. Lock the booking row — prevents concurrent state changes
+                $booking = Booking::lockForUpdate()->findOrFail($payment->booking_id);
+
+                // Guard: reject verification for expired/cancelled bookings
+                if (in_array($booking->status, ['expired', 'cancelled', 'rejected'])) {
+                    throw new \Exception('Booking sudah ' . $booking->status . ' dan tidak dapat diverifikasi.');
+                }
+
+                // 3. Verify the payment
+                $payment->update([
+                    'status' => 'verified',
+                    'verified_by' => Auth::id(),
+                    'verified_at' => now(),
+                    'paid_at' => now(),
                 ]);
 
-                // Dynamic locking: auto-cancel/reject other pending/waiting_dp bookings on the same date
-                Booking::where('event_date', $booking->event_date)
-                    ->where('id', '!=', $booking->id)
-                    ->whereIn('status', ['pending_approval', 'waiting_dp'])
-                    ->update([
-                        'status' => 'cancelled',
-                        'notes' => 'Otomatis dibatalkan karena pelanggan lain telah membayar DP terlebih dahulu pada tanggal ini.'
-                    ]);
+                // 4. Update booking status based on payment type
+                if ($payment->payment_type === 'dp') {
+                    // Guard: check for DP payment that booking is still waiting_dp
+                    if ($booking->status !== 'waiting_dp') {
+                        throw new \Exception('Booking tidak berstatus waiting_dp untuk verifikasi DP.');
+                    }
 
-            } elseif ($payment->payment_type === 'settlement' || $payment->payment_type === 'full_payment') {
-                $booking->update([
-                    'payment_status' => 'paid',
-                ]);
-                if ($booking->status !== 'confirmed') {
+                    // 5. Lock and check no other confirmed booking exists on same date
+                    $conflictExists = Booking::where('event_date', $booking->event_date)
+                        ->where('id', '!=', $booking->id)
+                        ->whereIn('status', ['confirmed', 'completed'])
+                        ->lockForUpdate()
+                        ->exists();
+
+                    if ($conflictExists) {
+                        throw new \Exception('Tanggal ini sudah dikonfirmasi oleh booking lain. Tidak dapat melakukan double confirmation.');
+                    }
+
                     $booking->update([
                         'status' => 'confirmed',
                         'confirmed_at' => now(),
+                        'payment_status' => 'partially_paid',
                     ]);
-                }
-            }
-        });
 
-        return response()->json([
-            'message' => 'Pembayaran berhasil diverifikasi dan dikonfirmasi!',
-            'data' => $payment->fresh()->load('booking')
-        ]);
+                    // 6. Auto-cancel competing bookings on the same date (inside transaction)
+                    Booking::where('event_date', $booking->event_date)
+                        ->where('id', '!=', $booking->id)
+                        ->whereIn('status', ['pending_approval', 'waiting_dp'])
+                        ->update([
+                            'status' => 'cancelled',
+                            'cancelled_at' => now(),
+                            'notes' => 'Otomatis dibatalkan karena pelanggan lain telah membayar DP terlebih dahulu pada tanggal ini.'
+                        ]);
+
+                } elseif ($payment->payment_type === 'settlement' || $payment->payment_type === 'full_payment') {
+                    $booking->update([
+                        'payment_status' => 'paid',
+                    ]);
+                    if ($booking->status !== 'confirmed') {
+                        $booking->update([
+                            'status' => 'confirmed',
+                            'confirmed_at' => now(),
+                        ]);
+                    }
+                }
+
+                return $payment->fresh()->load('booking');
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pembayaran berhasil diverifikasi dan dikonfirmasi!',
+                'data' => $result,
+                'errors' => null,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null,
+                'errors' => null,
+            ], 422);
+        }
     }
 
     /**
@@ -292,7 +418,12 @@ class BookingController extends Controller
         $booking = Booking::findOrFail($id);
 
         if ($booking->status !== 'confirmed') {
-            return response()->json(['message' => 'Hanya booking terkonfirmasi (confirmed) yang dapat diselesaikan.'], 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya booking terkonfirmasi (confirmed) yang dapat diselesaikan.',
+                'data' => null,
+                'errors' => null,
+            ], 422);
         }
 
         $booking->update([
@@ -300,8 +431,10 @@ class BookingController extends Controller
         ]);
 
         return response()->json([
+            'success' => true,
             'message' => 'Event berhasil diselesaikan!',
-            'data' => $booking
+            'data' => $booking,
+            'errors' => null,
         ]);
     }
 
@@ -318,8 +451,10 @@ class BookingController extends Controller
         ]);
 
         return response()->json([
+            'success' => true,
             'message' => 'Booking berhasil dibatalkan.',
-            'data' => $booking
+            'data' => $booking,
+            'errors' => null,
         ]);
     }
 }

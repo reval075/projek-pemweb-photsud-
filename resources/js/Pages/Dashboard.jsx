@@ -312,12 +312,28 @@ export default function Dashboard() {
                 return 'bg-emerald-50 text-emerald-700 border-emerald-100';
             case 'completed':
                 return 'bg-slate-100 text-slate-800 border-slate-200';
+            case 'expired':
+                return 'bg-orange-50 text-orange-700 border-orange-100';
             case 'rejected':
             case 'cancelled':
                 return 'bg-red-50 text-red-700 border-red-100';
             default:
                 return 'bg-gray-50 text-gray-700 border-gray-100';
         }
+    };
+
+    // Format DP expiration display
+    const formatExpiration = (dpExpiredAt) => {
+        if (!dpExpiredAt) return null;
+        const expiry = new Date(dpExpiredAt);
+        const now = new Date();
+        const diff = expiry - now;
+
+        if (diff <= 0) return { text: 'DP Expired', isExpired: true };
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        return { text: `${hours}j ${mins}m tersisa`, isExpired: false };
     };
 
     return (
@@ -387,6 +403,7 @@ export default function Dashboard() {
                                     <option value="completed">Completed</option>
                                     <option value="rejected">Rejected</option>
                                     <option value="cancelled">Cancelled</option>
+                                    <option value="expired">Expired (DP Timeout)</option>
                                 </select>
                             </div>
 
@@ -414,6 +431,12 @@ export default function Dashboard() {
                                                     <p>✉️ <strong>Email:</strong> {booking.customer_email}</p>
                                                     <p>📍 <strong>Location:</strong> {booking.event_location}</p>
                                                     <p>📅 <strong>Event Time:</strong> {booking.event_datetime || booking.event_date}</p>
+                                                    {booking.status === 'waiting_dp' && booking.dp_expired_at && (() => {
+                                                        const exp = formatExpiration(booking.dp_expired_at);
+                                                        if (!exp) return null;
+                                                        return <p className={`text-xs font-semibold mt-1 ${exp.isExpired ? 'text-orange-600' : 'text-blue-600'}`}>⏰ {exp.isExpired ? '⚠️ ' : ''}Batas DP: {new Date(booking.dp_expired_at).toLocaleString('id-ID')} ({exp.text})</p>;
+                                                    })()}
+                                                    {booking.status === 'expired' && <p className="text-xs font-semibold text-orange-600 mt-1">⚠️ Booking expired — batas waktu DP terlewati</p>}
                                                 </div>
                                                 <div>
                                                     <p>📦 <strong>Package:</strong> {booking.service_package?.name} ({booking.package_variant?.name || 'Varian Default'})</p>
