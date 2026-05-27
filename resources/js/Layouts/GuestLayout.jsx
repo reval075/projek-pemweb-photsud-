@@ -6,10 +6,15 @@ export default function GuestLayout({ children }) {
     return (
         <div className="min-h-screen flex flex-col font-sans bg-off-white text-charcoal selection:bg-primary selection:text-white">
             <Navbar />
-            <motion.main initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }} className="flex-grow">
+            <motion.main
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="flex-grow"
+            >
                 {children}
             </motion.main>
-            <footer className="bg-primary-900 text-white pt-16 pb-8">
+            <footer className="bg-charcoal text-white pt-16 pb-10 border-t-2 border-charcoal">
                 <div className="max-w-7xl mx-auto px-6 md:px-12">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
                         <div className="md:col-span-1">

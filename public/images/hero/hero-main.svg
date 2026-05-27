@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" fill="none">
+  <rect width="1200" height="800" fill="#F0F4F8"/>
+  <circle cx="900" cy="200" r="280" fill="#9BB5D3" fill-opacity="0.35"/>
+  <circle cx="200" cy="600" r="220" fill="#E8C44D" fill-opacity="0.2"/>
+  <rect x="380" y="180" width="440" height="440" rx="24" fill="#E1E9F1" stroke="#9BB5D3" stroke-width="2"/>
+  <text x="600" y="420" text-anchor="middle" font-family="Georgia, serif" font-size="28" fill="#7A9CC0">Memoforia Hero</text>
+  <text x="600" y="460" text-anchor="middle" font-family="sans-serif" font-size="14" fill="#8E99A4">Replace: public/images/hero/hero-main.jpg</text>
+</svg>

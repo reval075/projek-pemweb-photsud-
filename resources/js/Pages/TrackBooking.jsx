@@ -5,6 +5,11 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Loader2, Search, ArrowRight } from 'lucide-react';
 import { TRACKING_SESSION_KEY } from '../constants/tracking';
+import { art } from '@/design/artDirection';
+import EditorialStack from '@/components/art/EditorialStack';
+import ChunkyButton from '@/components/art/ChunkyButton';
+import LayeredCard from '@/components/art/LayeredCard';
+import { motionTokens } from '@/motion';
 
 export default function TrackBooking() {
     const [form, setForm] = useState({
@@ -16,7 +21,6 @@ export default function TrackBooking() {
     const [error, setError] = useState('');
     const [codePrefilled, setCodePrefilled] = useState(false);
 
-    // Pre-fill booking code from success flow (?code= only — no sensitive data in URL)
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
@@ -104,39 +108,45 @@ export default function TrackBooking() {
         }
     };
 
+    const inputClass = (hasError) =>
+        `w-full px-5 py-4 rounded-xl border-2 bg-white font-medium text-charcoal focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all ${
+            hasError ? 'border-red-400' : 'border-charcoal/15'
+        }`;
+
     return (
         <GuestLayout>
             <Head title="Lacak Booking" />
 
-            <section className="py-24 px-6 min-h-[70vh] flex items-center justify-center">
+            <section className={`${art.section.pad} min-h-[85vh] flex items-center pt-28 md:pt-36`}>
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 48 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="w-full max-w-lg"
+                    transition={{ duration: motionTokens.duration.cinematic, ease: motionTokens.ease.out }}
+                    className="w-full max-w-xl mx-auto"
                 >
-                    <div className="text-center mb-10">
-                        <p className="text-primary uppercase tracking-widest text-sm mb-4">Guest Tracking</p>
-                        <h1 className="text-4xl font-serif text-charcoal font-medium mb-3">Lacak Booking Anda</h1>
-                        <p className="text-slate font-light text-sm leading-relaxed">
-                            Masukkan kode booking dan email atau nomor HP yang digunakan saat pengajuan booking.
+                    <div className="mb-10 md:mb-14">
+                        <p className={`${art.type.label} mb-4`}>guest tracking</p>
+                        <EditorialStack lines={['Lacak', 'Booking']} lineClassName="type-display block" animate={false} />
+                        <p className={`${art.type.body} mt-6`}>
+                            Masukkan kode booking dan email atau nomor HP yang digunakan saat pengajuan.
                         </p>
                         {codePrefilled && (
-                            <p className="text-xs text-primary font-medium mt-3">
-                                Kode booking sudah terisi. Lengkapi email atau nomor HP untuk melanjutkan.
+                            <p className="text-sm font-bold text-primary mt-4 uppercase tracking-wide">
+                                Kode booking sudah terisi — lengkapi kontak Anda.
                             </p>
                         )}
                     </div>
 
-                    <div className="bg-white p-8 md:p-10 rounded-3xl shadow-xl shadow-primary/5 border border-primary-50">
+                    <LayeredCard className="p-8 md:p-10">
                         {error && (
-                            <div className="bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-2xl mb-6 text-sm text-center">
+                            <div className="bg-red-50 border-2 border-red-200 text-red-700 px-5 py-4 rounded-2xl mb-6 text-sm font-medium">
                                 {error}
                             </div>
                         )}
 
                         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                             <div>
-                                <label htmlFor="booking_code" className="block text-sm font-medium text-charcoal mb-2">
+                                <label htmlFor="booking_code" className={`${art.type.label} block mb-3 text-charcoal`}>
                                     Kode Booking
                                 </label>
                                 <input
@@ -144,20 +154,18 @@ export default function TrackBooking() {
                                     type="text"
                                     value={form.booking_code}
                                     onChange={(e) => updateForm('booking_code', e.target.value)}
-                                    placeholder="Contoh: MEMO-20260610-ABC12"
-                                    className={`w-full px-4 py-3 rounded-xl border bg-off-white/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all ${
-                                        fieldErrors.booking_code ? 'border-red-300' : 'border-beige'
-                                    }`}
+                                    placeholder="MEMO-20260610-ABC12"
+                                    className={inputClass(fieldErrors.booking_code)}
                                     disabled={loading}
                                     autoComplete="off"
                                 />
                                 {fieldErrors.booking_code && (
-                                    <p className="text-red-600 text-xs mt-2">{fieldErrors.booking_code}</p>
+                                    <p className="text-red-600 text-xs mt-2 font-medium">{fieldErrors.booking_code}</p>
                                 )}
                             </div>
 
                             <div>
-                                <label htmlFor="contact" className="block text-sm font-medium text-charcoal mb-2">
+                                <label htmlFor="contact" className={`${art.type.label} block mb-3 text-charcoal`}>
                                     Email atau Nomor HP
                                 </label>
                                 <input
@@ -166,41 +174,32 @@ export default function TrackBooking() {
                                     value={form.contact}
                                     onChange={(e) => updateForm('contact', e.target.value)}
                                     placeholder="email@example.com atau 0812xxxxxxx"
-                                    className={`w-full px-4 py-3 rounded-xl border bg-off-white/50 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all ${
-                                        fieldErrors.contact ? 'border-red-300' : 'border-beige'
-                                    }`}
+                                    className={inputClass(fieldErrors.contact)}
                                     disabled={loading}
                                     autoComplete="off"
                                 />
                                 {fieldErrors.contact && (
-                                    <p className="text-red-600 text-xs mt-2">{fieldErrors.contact}</p>
+                                    <p className="text-red-600 text-xs mt-2 font-medium">{fieldErrors.contact}</p>
                                 )}
                             </div>
 
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full flex items-center justify-center space-x-2 bg-primary text-white px-8 py-3.5 rounded-full hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
-                            >
+                            <ChunkyButton type="submit" disabled={loading} className="w-full justify-center">
                                 {loading ? (
                                     <>
-                                        <Loader2 size={20} className="animate-spin" />
-                                        <span>Mencari booking...</span>
+                                        <Loader2 size={20} className="animate-spin" /> Mencari...
                                     </>
                                 ) : (
                                     <>
-                                        <Search size={18} />
-                                        <span>Lacak Booking</span>
-                                        <ArrowRight size={18} />
+                                        <Search size={20} /> Lacak Booking <ArrowRight size={20} />
                                     </>
                                 )}
-                            </button>
+                            </ChunkyButton>
                         </form>
 
-                        <p className="text-xs text-warm-grey text-center mt-6 leading-relaxed">
-                            Data kontak harus sama persis dengan yang Anda gunakan saat mengajukan booking.
+                        <p className="text-xs text-warm-grey text-center mt-8 leading-relaxed">
+                            Data kontak harus sama persis dengan yang digunakan saat mengajukan booking.
                         </p>
-                    </div>
+                    </LayeredCard>
                 </motion.div>
             </section>
         </GuestLayout>

@@ -5,19 +5,39 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ArrowRight, ArrowLeft, CheckCircle, Loader2, Calendar, Package, User, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import BookingSuccess from '../components/BookingSuccess';
+import { art } from '@/design/artDirection';
+import EditorialStack from '@/components/art/EditorialStack';
+import ChunkyButton from '@/components/art/ChunkyButton';
+import LayeredCard from '@/components/art/LayeredCard';
+import { motionTokens } from '@/motion';
 
 const STEPS = ['Select Date', 'Choose Service', 'Template & Addons', 'Event Details', 'Confirmation'];
 
 function StepIndicator({ current, steps }) {
     return (
-        <div className="flex items-center justify-center mb-12 flex-wrap gap-y-4">
+        <div className="flex items-center justify-start md:justify-center mb-10 md:mb-14 overflow-x-auto pb-2 gap-1 md:gap-0">
             {steps.map((label, i) => (
-                <div key={i} className="flex items-center">
-                    <div className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-medium transition-all duration-300 ${i <= current ? 'bg-primary text-white' : 'bg-beige text-warm-grey'}`}>
-                        {i < current ? <CheckCircle size={18} /> : i + 1}
-                    </div>
-                    <span className={`hidden md:block ml-2 text-sm ${i <= current ? 'text-charcoal font-medium' : 'text-warm-grey font-light'}`}>{label}</span>
-                    {i < steps.length - 1 && <div className={`w-6 md:w-12 h-px mx-2 ${i < current ? 'bg-primary' : 'bg-beige'}`} />}
+                <div key={i} className="flex items-center shrink-0">
+                    <motion.div
+                        layout
+                        className={`flex items-center justify-center w-11 h-11 md:w-12 md:h-12 rounded-full text-sm font-bold border-2 transition-colors ${
+                            i <= current
+                                ? 'bg-primary text-white border-charcoal/20 shadow-[4px_4px_0_0_rgba(44,62,80,0.15)]'
+                                : 'bg-white text-warm-grey border-beige'
+                        }`}
+                    >
+                        {i < current ? <CheckCircle size={20} /> : i + 1}
+                    </motion.div>
+                    <span
+                        className={`hidden lg:block ml-2 text-xs font-bold uppercase tracking-widest max-w-[100px] leading-tight ${
+                            i <= current ? 'text-charcoal' : 'text-warm-grey'
+                        }`}
+                    >
+                        {label}
+                    </span>
+                    {i < steps.length - 1 && (
+                        <div className={`w-4 md:w-10 h-1 mx-1 md:mx-2 rounded-full ${i < current ? 'bg-primary' : 'bg-beige'}`} />
+                    )}
                 </div>
             ))}
         </div>
@@ -293,26 +313,45 @@ export default function Booking({ initialDate = null }) {
     return (
         <GuestLayout>
             <Head title="Premium Photobooth Vendor Booking" />
-            <section className="py-24 px-6 max-w-5xl mx-auto min-h-[70vh]">
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-                    <p className="text-primary uppercase tracking-widest text-sm mb-4">Timeless Memories</p>
-                    <h1 className="text-4xl md:text-5xl font-serif mb-4 text-charcoal font-medium">Book Memoforia Photobooth</h1>
+            <section className={`${art.section.pad} max-w-5xl mx-auto min-h-[70vh] pt-28 md:pt-32`}>
+                <motion.div
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: motionTokens.duration.cinematic, ease: motionTokens.ease.out }}
+                    className="mb-10 md:mb-14"
+                >
+                    <p className={`${art.type.label} mb-4`}>book your session</p>
+                    <EditorialStack
+                        lines={['Book', 'Memoforia']}
+                        lineClassName="type-display block"
+                        animate={false}
+                    />
                 </motion.div>
 
                 <StepIndicator current={step} steps={STEPS} />
 
                 {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-2xl mb-8 text-center text-sm">{error}</div>
+                    <div className="bg-red-50 border-2 border-red-200 text-red-700 px-6 py-4 rounded-2xl mb-8 text-sm font-medium">
+                        {error}
+                    </div>
                 )}
 
-                <div className="bg-white p-6 md:p-12 rounded-3xl shadow-xl shadow-primary/5 border border-primary-50">
+                <LayeredCard className="p-6 md:p-10 lg:p-12">
                     <AnimatePresence mode="wait">
                         {/* Step 0: Availability Calendar */}
                         {step === 0 && (
-                            <motion.div key="step0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                                <h3 className="text-xl font-serif mb-6 flex items-center"><Calendar size={20} className="mr-2 text-primary" /> 1. Pilih Tanggal Acara</h3>
-                                
-                                <div className="max-w-2xl mx-auto border border-beige rounded-2xl p-6 bg-off-white/50">
+                            <motion.div
+                                key="step0"
+                                initial={{ opacity: 0, y: 32 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -24 }}
+                                transition={{ duration: motionTokens.duration.base, ease: motionTokens.ease.out }}
+                            >
+                                <h3 className="type-shout !text-2xl md:!text-3xl mb-8 flex items-center gap-3">
+                                    <Calendar size={28} className="text-primary shrink-0" /> Pilih Tanggal
+                                </h3>
+
+                                <div className="max-w-2xl mx-auto border-2 border-charcoal/10 rounded-2xl p-6 bg-off-white/80 shadow-[6px_6px_0_0_rgba(155,181,211,0.35)]">
                                     <div className="flex items-center justify-between mb-8">
                                         <h4 className="font-serif text-lg text-charcoal">
                                             {currentDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}
@@ -381,13 +420,22 @@ export default function Booking({ initialDate = null }) {
 
                         {/* Step 1: Package Selection & Variants */}
                         {step === 1 && (
-                            <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
-                                <h3 className="text-xl font-serif mb-2 flex items-center"><Package size={20} className="mr-2 text-primary" /> 2. Pilih Layanan & Varian Paket</h3>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <motion.div
+                                key="step1"
+                                initial={{ opacity: 0, y: 32 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -24 }}
+                                transition={{ duration: motionTokens.duration.base, ease: motionTokens.ease.out }}
+                                className="space-y-8"
+                            >
+                                <h3 className="type-shout !text-2xl md:!text-3xl mb-2 flex items-center gap-3">
+                                    <Package size={28} className="text-primary shrink-0" /> Pilih Paket
+                                </h3>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     {packages.map(pkg => (
                                         <button key={pkg.id} onClick={() => { updateForm('service_package_id', pkg.id); updateForm('package_variant_id', ''); }}
-                                            className={`p-5 rounded-2xl border-2 text-left transition-all ${form.service_package_id == pkg.id ? 'border-primary bg-primary-50/50' : 'border-beige hover:border-primary-200 bg-white'}`}>
+                                            className={`p-5 rounded-2xl border-2 text-left transition-all shadow-[4px_4px_0_0_rgba(44,62,80,0.08)] ${form.service_package_id == pkg.id ? 'border-primary bg-primary-50/60 -translate-y-1' : 'border-charcoal/10 hover:border-primary bg-white'}`}>
                                             <h4 className="font-serif text-md text-charcoal font-semibold mb-1">{pkg.name}</h4>
                                             <p className="text-xs text-warm-grey capitalize">Kategori: {pkg.category?.replace('_', ' ')}</p>
                                             <p className="text-xs text-slate font-light mt-2 line-clamp-3">{pkg.description}</p>
@@ -418,8 +466,15 @@ export default function Booking({ initialDate = null }) {
 
                         {/* Step 2: Photo Templates & Addons */}
                         {step === 2 && (
-                            <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
-                                <h3 className="text-xl font-serif mb-2 flex items-center">✨ 3. Pilih Frame Layout & Addons opsional</h3>
+                            <motion.div
+                                key="step2"
+                                initial={{ opacity: 0, y: 32 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -24 }}
+                                transition={{ duration: motionTokens.duration.base, ease: motionTokens.ease.out }}
+                                className="space-y-8"
+                            >
+                                <h3 className="type-shout !text-2xl md:!text-3xl mb-2">Frame & Addons</h3>
                                 
                                 <div>
                                     <h4 className="font-serif text-md text-charcoal mb-4">A. Pilih Layout Frame Cetak Foto:</h4>
@@ -465,8 +520,16 @@ export default function Booking({ initialDate = null }) {
 
                         {/* Step 3: Event Details Form */}
                         {step === 3 && (
-                            <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                                <h3 className="text-xl font-serif mb-6 flex items-center"><User size={20} className="mr-2 text-primary" /> 4. Data Acara & Pelanggan</h3>
+                            <motion.div
+                                key="step3"
+                                initial={{ opacity: 0, y: 32 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -24 }}
+                                transition={{ duration: motionTokens.duration.base, ease: motionTokens.ease.out }}
+                            >
+                                <h3 className="type-shout !text-2xl md:!text-3xl mb-8 flex items-center gap-3">
+                                    <User size={28} className="text-primary shrink-0" /> Data Acara
+                                </h3>
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-6">
@@ -523,10 +586,18 @@ export default function Booking({ initialDate = null }) {
 
                         {/* Step 4: Summary & Confirmation */}
                         {step === 4 && (
-                            <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                                <h3 className="text-xl font-serif mb-6 flex items-center"><CheckCircle size={20} className="mr-2 text-primary" /> 5. Konfirmasi Detail Pesanan</h3>
-                                
-                                <div className="bg-primary-50/50 rounded-2xl p-6 md:p-8 space-y-4 border border-primary-50 max-w-2xl mx-auto">
+                            <motion.div
+                                key="step4"
+                                initial={{ opacity: 0, y: 32 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -24 }}
+                                transition={{ duration: motionTokens.duration.base, ease: motionTokens.ease.out }}
+                            >
+                                <h3 className="type-shout !text-2xl md:!text-3xl mb-8 flex items-center gap-3">
+                                    <CheckCircle size={28} className="text-primary shrink-0" /> Konfirmasi
+                                </h3>
+
+                                <div className="bg-primary-50/80 rounded-2xl p-6 md:p-8 space-y-4 border-2 border-charcoal/10 max-w-2xl mx-auto shadow-[6px_6px_0_0_rgba(155,181,211,0.4)]">
                                     <div className="flex justify-between border-b border-primary-100/50 pb-2.5 text-sm">
                                         <span className="text-slate font-light">Jenis Acara</span>
                                         <span className="font-semibold text-charcoal">{form.event_name}</span>
@@ -579,26 +650,35 @@ export default function Booking({ initialDate = null }) {
                         )}
                     </AnimatePresence>
 
-                    {/* Navigation Buttons */}
-                    <div className="flex justify-between mt-10 pt-8 border-t border-beige">
-                        <button onClick={() => setStep(s => s - 1)} disabled={step === 0}
-                            className={`flex items-center space-x-2 px-6 py-3 rounded-full transition-all ${step === 0 ? 'text-warm-grey cursor-not-allowed opacity-50' : 'text-charcoal hover:bg-beige'}`}>
-                            <ArrowLeft size={16} /> <span>Kembali</span>
-                        </button>
+                    <div className="flex flex-col sm:flex-row justify-between gap-4 mt-10 pt-8 border-t-2 border-charcoal/10">
+                        <ChunkyButton
+                            type="button"
+                            variant="ghost"
+                            onClick={() => setStep((s) => s - 1)}
+                            disabled={step === 0}
+                            className="!shadow-none"
+                        >
+                            <ArrowLeft size={18} /> Kembali
+                        </ChunkyButton>
                         {step < 4 ? (
-                            <button onClick={() => setStep(s => s + 1)} disabled={!canNext()}
-                                className={`flex items-center space-x-2 px-8 py-3 rounded-full transition-all ${canNext() ? 'bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20' : 'bg-beige text-warm-grey cursor-not-allowed'}`}>
-                                <span>Lanjut</span> <ArrowRight size={16} />
-                            </button>
+                            <ChunkyButton type="button" onClick={() => setStep((s) => s + 1)} disabled={!canNext()}>
+                                Lanjut <ArrowRight size={18} />
+                            </ChunkyButton>
                         ) : (
-                            <button onClick={handleSubmit} disabled={submitting}
-                                className="flex items-center space-x-2 px-8 py-3 rounded-full bg-primary text-white hover:bg-primary-dark transition-all disabled:opacity-50 shadow-lg shadow-primary/20">
-                                {submitting ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
-                                <span>{submitting ? 'Mengirim...' : 'Ajukan Booking Photobooth'}</span>
-                            </button>
+                            <ChunkyButton type="button" onClick={handleSubmit} disabled={submitting}>
+                                {submitting ? (
+                                    <>
+                                        <Loader2 size={18} className="animate-spin" /> Mengirim...
+                                    </>
+                                ) : (
+                                    <>
+                                        <CheckCircle size={18} /> Ajukan Booking
+                                    </>
+                                )}
+                            </ChunkyButton>
                         )}
                     </div>
-                </div>
+                </LayeredCard>
             </section>
         </GuestLayout>
     );

@@ -41,6 +41,63 @@
     text-wrap: balance;
   }
 
+  /* Maggie-scale editorial typography — Memoforia palette */
+  .type-mega {
+    font-size: clamp(3.25rem, 12vw, 9rem);
+    line-height: 0.88;
+    letter-spacing: -0.04em;
+  }
+
+  .type-display {
+    font-size: clamp(2.5rem, 8vw, 6.5rem);
+    line-height: 0.9;
+    letter-spacing: -0.035em;
+  }
+
+  .type-shout {
+    font-size: clamp(1.75rem, 5vw, 4rem);
+    line-height: 0.95;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+  }
+
+  .type-stat {
+    font-size: clamp(3rem, 10vw, 7rem);
+    line-height: 0.85;
+    letter-spacing: -0.03em;
+  }
+
+  .type-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .maggie-marquee-track {
+    animation: maggie-marquee 28s linear infinite;
+  }
+
+  @keyframes maggie-marquee {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .broken-grid > *:nth-child(odd) {
+    transform: translateY(1.5rem);
+  }
+
+  @media (max-width: 768px) {
+    .broken-grid > *:nth-child(odd) {
+      transform: none;
+    }
+  }
+
   .booking-session-grain {
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }

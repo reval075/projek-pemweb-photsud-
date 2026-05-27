@@ -2,16 +2,31 @@ import { Link } from '@inertiajs/react';
 import { Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { motionTokens } from '@/motion';
+import ChunkyButton from '@/components/art/ChunkyButton';
+
+function NavLink({ href, children, onClick }) {
+    return (
+        <motion.div whileHover={{ y: -2 }} transition={motionTokens.spring.soft}>
+            <Link
+                href={href}
+                onClick={onClick}
+                className="group relative font-sans font-bold uppercase tracking-[0.18em] text-xs text-charcoal/70 hover:text-charcoal transition-colors"
+            >
+                {children}
+                <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-primary group-hover:w-full transition-all duration-500 ease-out" />
+            </Link>
+        </motion.div>
+    );
+}
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
 
     useEffect(() => {
-        const handleScroll = () => {
-            setScrolled(window.scrollY > 50);
-        };
-        window.addEventListener('scroll', handleScroll);
+        const handleScroll = () => setScrolled(window.scrollY > 40);
+        window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
@@ -26,86 +41,85 @@ export default function Navbar() {
 
     return (
         <>
-            <nav className={`fixed w-full z-50 transition-all duration-500 ${scrolled ? 'bg-off-white/90 backdrop-blur-md py-3 shadow-sm' : 'bg-transparent py-5'}`}>
-                <div className="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
-                    {/* Logo */}
-                    <Link href="/" className="flex items-center space-x-3">
-                        <img 
-                            src="/images/logo.png" 
-                            alt="MemForia Logo" 
-                            className="h-10 w-10 rounded-full object-cover"
-                        />
-                        <span className="font-serif text-xl tracking-wide font-medium text-charcoal">
-                            MemForia
-                        </span>
-                    </Link>
-
-                    {/* Desktop Nav */}
-                    <div className="hidden md:flex items-center space-x-10">
-                        {navLinks.map((link) => (
-                            <Link 
-                                key={link.name} 
-                                href={link.href}
-                                className="text-sm uppercase tracking-widest text-charcoal/60 hover:text-primary-dark transition-colors duration-300"
-                            >
-                                {link.name}
-                            </Link>
-                        ))}
-                    </div>
-
-                    {/* CTA Button - Desktop */}
-                    <div className="hidden md:block">
-                        <Link 
-                            href="/booking-session" 
-                            className="bg-primary text-white px-6 py-2.5 rounded-full text-sm uppercase tracking-widest hover:bg-primary-dark transition-all duration-300"
-                        >
-                            Book Now
+            <motion.header
+                initial={false}
+                animate={{
+                    backgroundColor: scrolled ? 'rgba(248, 249, 252, 0.95)' : 'rgba(248, 249, 252, 0)',
+                    borderBottomColor: scrolled ? 'rgba(44, 62, 80, 0.08)' : 'rgba(44, 62, 80, 0)',
+                }}
+                transition={{ duration: motionTokens.duration.fast, ease: motionTokens.ease.out }}
+                className="fixed w-full z-50 backdrop-blur-md border-b-2"
+            >
+                <div className="max-w-[1400px] mx-auto px-5 sm:px-8 md:px-12 py-4 md:py-5 flex justify-between items-center">
+                    <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} transition={motionTokens.spring.soft}>
+                        <Link href="/" className="flex items-center gap-3">
+                            <img
+                                src="/images/logo.png"
+                                alt="MemForia"
+                                className="h-11 w-11 rounded-full object-cover border-2 border-white shadow-md"
+                            />
+                            <span className="font-serif text-xl md:text-2xl font-medium text-charcoal tracking-tight">
+                                MemForia
+                            </span>
                         </Link>
+                    </motion.div>
+
+                    <nav className="hidden lg:flex items-center gap-8 xl:gap-10">
+                        {navLinks.map((link) => (
+                            <NavLink key={link.name} href={link.href}>
+                                {link.name}
+                            </NavLink>
+                        ))}
+                    </nav>
+
+                    <div className="hidden lg:block">
+                        <ChunkyButton href="/booking-session" className="!py-3 !px-8 !text-xs">
+                            Book Now
+                        </ChunkyButton>
                     </div>
 
-                    {/* Mobile Menu Button */}
-                    <button 
-                        className="md:hidden text-charcoal focus:outline-none z-50"
+                    <button
+                        type="button"
+                        className="lg:hidden text-charcoal p-2 -mr-2"
                         onClick={() => setIsOpen(!isOpen)}
+                        aria-label={isOpen ? 'Close menu' : 'Open menu'}
                     >
-                        {isOpen ? <X size={28} /> : <Menu size={28} />}
+                        {isOpen ? <X size={28} strokeWidth={2.5} /> : <Menu size={28} strokeWidth={2.5} />}
                     </button>
                 </div>
-            </nav>
+            </motion.header>
 
-            {/* Mobile Nav Overlay */}
             <AnimatePresence>
                 {isOpen && (
-                    <motion.div 
-                        initial={{ opacity: 0, y: -20 }}
+                    <motion.div
+                        initial={{ opacity: 0, y: -24 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.3 }}
-                        className="fixed inset-0 bg-off-white z-40 flex flex-col justify-center items-center"
+                        exit={{ opacity: 0, y: -24 }}
+                        transition={{ duration: motionTokens.duration.fast, ease: motionTokens.ease.out }}
+                        className="fixed inset-0 z-40 bg-off-white flex flex-col justify-center items-center px-8"
                     >
-                        {/* Logo in mobile menu */}
-                        <img 
-                            src="/images/logo.png" 
-                            alt="MemForia Logo" 
-                            className="h-20 w-20 rounded-full object-cover mb-10"
-                        />
-                        <div className="flex flex-col space-y-8 items-center">
+                        <img src="/images/logo.png" alt="" className="h-24 w-24 rounded-full mb-12 border-4 border-white shadow-xl" />
+                        <div className="flex flex-col gap-8 items-center w-full max-w-sm">
                             {navLinks.map((link, i) => (
                                 <motion.div
                                     key={link.name}
-                                    initial={{ opacity: 0, y: 20 }}
+                                    initial={{ opacity: 0, y: 24 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.1 * i }}
+                                    transition={{ delay: i * 0.07, ease: motionTokens.ease.out }}
+                                    className="w-full text-center"
                                 >
-                                    <Link 
+                                    <Link
                                         href={link.href}
                                         onClick={() => setIsOpen(false)}
-                                        className="font-serif text-3xl text-charcoal hover:text-primary transition-colors duration-300"
+                                        className="type-shout !text-2xl text-charcoal hover:text-primary-dark transition-colors"
                                     >
                                         {link.name}
                                     </Link>
                                 </motion.div>
                             ))}
+                            <ChunkyButton href="/booking-session" className="w-full justify-center mt-4">
+                                Book Now
+                            </ChunkyButton>
                         </div>
                     </motion.div>
                 )}

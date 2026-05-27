@@ -1,5 +1,5 @@
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
@@ -16,6 +16,12 @@ import {
 } from 'lucide-react';
 import { TRACKING_SESSION_KEY } from '../constants/tracking';
 import PaymentProofUpload from '../components/PaymentProofUpload';
+import { art } from '@/design/artDirection';
+import EditorialStack from '@/components/art/EditorialStack';
+import ChunkyButton from '@/components/art/ChunkyButton';
+import LayeredCard from '@/components/art/LayeredCard';
+import { motionTokens } from '@/motion';
+import { Reveal, RevealItem } from '@/motion/components/Reveal';
 import {
     formatCurrency,
     formatDateTime,
@@ -29,13 +35,13 @@ import {
 
 function SectionCard({ title, icon: Icon, children }) {
     return (
-        <div className="bg-white rounded-2xl border border-beige p-6 md:p-8 shadow-sm">
-            <h3 className="font-serif text-lg text-charcoal mb-5 flex items-center border-b border-beige pb-3">
-                {Icon && <Icon size={20} className="mr-2 text-primary shrink-0" />}
+        <LayeredCard className="p-6 md:p-8" hover={false}>
+            <h3 className="type-shout !text-xl md:!text-2xl text-charcoal mb-6 flex items-center gap-3 border-b-2 border-charcoal/10 pb-4">
+                {Icon && <Icon size={26} className="text-primary shrink-0" />}
                 {title}
             </h3>
             {children}
-        </div>
+        </LayeredCard>
     );
 }
 
@@ -200,15 +206,16 @@ export default function TrackBookingDetail() {
         <GuestLayout>
             <Head title={`Detail Booking ${booking.booking_code}`} />
 
-            <section className="py-20 md:py-24 px-4 sm:px-6 max-w-4xl mx-auto min-h-[70vh]">
-                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-                    {/* Header */}
-                    <div className="text-center mb-8 md:mb-10">
-                        <p className="text-primary uppercase tracking-widest text-sm mb-3">Detail Tracking</p>
-                        <h1 className="text-3xl md:text-4xl font-serif text-charcoal font-medium mb-2">
-                            Status Booking Anda
-                        </h1>
-                        <p className="text-primary font-semibold text-lg">{booking.booking_code}</p>
+            <section className={`${art.section.pad} max-w-4xl mx-auto min-h-[70vh] pt-28 md:pt-36`}>
+                <motion.div
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: motionTokens.duration.cinematic, ease: motionTokens.ease.out }}
+                >
+                    <div className="mb-10 md:mb-12">
+                        <p className={`${art.type.label} mb-4`}>detail tracking</p>
+                        <EditorialStack lines={['Status', 'Booking']} lineClassName="type-display block" animate={false} />
+                        <p className="type-shout !text-2xl text-primary-dark mt-4 tabular-nums">{booking.booking_code}</p>
                     </div>
 
                     {fetchError && (
@@ -217,8 +224,7 @@ export default function TrackBookingDetail() {
                         </div>
                     )}
 
-                    {/* Status overview */}
-                    <div className="bg-white rounded-3xl shadow-xl shadow-primary/5 border border-primary-50 p-6 md:p-8 mb-6">
+                    <LayeredCard className="p-6 md:p-8 mb-8" hover={false}>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                             <div className="flex flex-wrap items-center gap-2">
                                 <StatusBadge
@@ -230,15 +236,10 @@ export default function TrackBookingDetail() {
                                     styleClass="bg-off-white text-charcoal border-beige"
                                 />
                             </div>
-                            <button
-                                type="button"
-                                onClick={handleRefresh}
-                                disabled={refreshing}
-                                className="inline-flex items-center justify-center gap-2 text-sm text-primary hover:text-primary-dark border border-beige px-4 py-2 rounded-full transition-colors disabled:opacity-60"
-                            >
+                            <ChunkyButton type="button" variant="ghost" onClick={handleRefresh} disabled={refreshing} className="!py-2 !px-5 !text-xs">
                                 <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-                                {refreshing ? 'Memperbarui...' : 'Perbarui Data'}
-                            </button>
+                                {refreshing ? 'Memperbarui...' : 'Perbarui'}
+                            </ChunkyButton>
                         </div>
 
                         {statusMessage && (
@@ -267,10 +268,11 @@ export default function TrackBookingDetail() {
                                 Booking ini telah kedaluwarsa karena batas waktu DP terlewati.
                             </p>
                         )}
-                    </div>
+                    </LayeredCard>
 
-                    <div className="space-y-6">
+                    <Reveal className="space-y-6 md:space-y-8" stagger staggerChildren={0.08}>
                         {/* Booking & customer info */}
+                        <RevealItem>
                         <SectionCard title="Informasi Booking" icon={User}>
                             <InfoRow label="Nama Pelanggan" value={booking.customer_name} />
                             <InfoRow label="Email" value={booking.customer_email} />
@@ -286,15 +288,17 @@ export default function TrackBookingDetail() {
                                 <InfoRow label="Dibatalkan / Expired Pada" value={formatDateTime(booking.cancelled_at)} />
                             )}
                         </SectionCard>
+                        </RevealItem>
 
-                        {/* Event */}
+                        <RevealItem>
                         <SectionCard title="Detail Event" icon={Calendar}>
                             <InfoRow label="Nama Event" value={booking.event_name} />
                             <InfoRow label="Lokasi" value={booking.event_location} />
                             <InfoRow label="Tanggal & Waktu" value={formatDateTime(booking.event_datetime)} />
                         </SectionCard>
+                        </RevealItem>
 
-                        {/* Package */}
+                        <RevealItem>
                         <SectionCard title="Paket & Layanan" icon={Package}>
                             <InfoRow label="Paket Jasa" value={booking.service_package?.name} />
                             <InfoRow label="Varian" value={booking.package_variant?.name} />
@@ -346,6 +350,7 @@ export default function TrackBookingDetail() {
                                 <p className="text-sm text-warm-grey mt-4">Tidak ada addon tambahan.</p>
                             )}
                         </SectionCard>
+                        </RevealItem>
 
                         {canShowUploadSection && (
                             <PaymentProofUpload
@@ -362,7 +367,7 @@ export default function TrackBookingDetail() {
                             </div>
                         )}
 
-                        {/* Payment summary */}
+                        <RevealItem>
                         <SectionCard title="Ringkasan Pembayaran" icon={CreditCard}>
                             <InfoRow label="Subtotal Paket" value={formatCurrency(packageSubtotal)} />
                             <InfoRow label="Total Addons" value={formatCurrency(addonsTotal)} />
@@ -413,29 +418,26 @@ export default function TrackBookingDetail() {
                                 )}
                             </div>
                         </SectionCard>
+                        </RevealItem>
 
                         {booking.notes && (
+                            <RevealItem>
                             <SectionCard title="Catatan" icon={MapPin}>
                                 <p className="text-sm text-slate leading-relaxed whitespace-pre-wrap">
                                     {booking.notes}
                                 </p>
                             </SectionCard>
+                            </RevealItem>
                         )}
-                    </div>
+                    </Reveal>
 
-                    <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Link
-                            href="/track-booking"
-                            className="inline-block bg-primary text-white px-8 py-3 rounded-full hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 text-center w-full sm:w-auto"
-                        >
+                    <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <ChunkyButton href="/track-booking" className="w-full sm:w-auto justify-center">
                             Lacak Booking Lain
-                        </Link>
-                        <Link
-                            href="/booking"
-                            className="inline-block border border-beige text-charcoal px-8 py-3 rounded-full hover:bg-beige transition-all text-center w-full sm:w-auto"
-                        >
+                        </ChunkyButton>
+                        <ChunkyButton href="/booking" variant="secondary" className="w-full sm:w-auto justify-center">
                             Buat Booking Baru
-                        </Link>
+                        </ChunkyButton>
                     </div>
                 </motion.div>
             </section>
