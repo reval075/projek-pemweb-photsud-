@@ -4,11 +4,11 @@ import { motionTokens } from '@/motion/tokens';
 import usePrefersReducedMotion from '@/motion/hooks/usePrefersReducedMotion';
 
 const COLLAGE_LAYOUT = [
-    { top: '0%', left: '0%', width: '42%', rotate: -7, z: 10, delay: 0 },
-    { top: '8%', left: '38%', width: '48%', rotate: 5, z: 20, delay: 0.08 },
-    { top: '38%', left: '8%', width: '38%', rotate: 8, z: 15, delay: 0.16 },
-    { top: '42%', left: '48%', width: '44%', rotate: -4, z: 25, delay: 0.12 },
-    { top: '22%', left: '62%', width: '34%', rotate: -9, z: 30, delay: 0.2 },
+    { top: '0%',  left: '2%',  width: '28%', rotate: -4, z: 10, delay: 0 },
+    { top: '2%',  left: '34%', width: '28%', rotate:  3, z: 20, delay: 0.08 },
+    { top: '0%',  left: '67%', width: '26%', rotate: -5, z: 15, delay: 0.16 },
+    { top: '48%', left: '8%',  width: '30%', rotate:  4, z: 25, delay: 0.12 },
+    { top: '46%', left: '46%', width: '30%', rotate: -3, z: 30, delay: 0.2 },
 ];
 
 /**
@@ -18,7 +18,7 @@ export default function ChaosGallery({ photos, className = '' }) {
     const reduced = usePrefersReducedMotion();
 
     return (
-        <div className={`relative w-full min-h-[520px] md:min-h-[680px] lg:min-h-[760px] ${className}`}>
+        <div className={`relative w-full min-h-[620px] md:min-h-[820px] lg:min-h-[920px] overflow-hidden ${className}`}>
             {photos.map((photo, i) => (
                 <ChaosTile key={photo.alt} photo={photo} layout={COLLAGE_LAYOUT[i]} reduced={reduced} />
             ))}

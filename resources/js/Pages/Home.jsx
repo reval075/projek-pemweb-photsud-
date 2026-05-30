@@ -109,7 +109,7 @@ export default function Home() {
             </SectionBlock>
 
             {/* ═══ 2. KINETIC WORD STORM — pure Maggie ═══ */}
-            <SectionBlock className="bg-beige py-16 md:py-24 lg:py-32 px-5 sm:px-8 md:px-12 lg:px-16 overflow-hidden">
+            <SectionBlock className="bg-beige py-16 md:py-24 lg:py-32 px-5 sm:px-8 md:px-12 lg:px-16 overflow-x-clip overflow-y-visible">
                 <div className="max-w-[1500px] mx-auto">
                     <KineticWordStorm words={KINETIC_WORDS} />
                     <motion.p
@@ -117,7 +117,7 @@ export default function Home() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: 0.5, duration: 0.8, ease: motionTokens.ease.out }}
-                        className="type-display font-serif italic text-primary-dark mt-10 md:mt-16 ml-[4vw]"
+                        className="type-display font-serif italic text-primary-dark mt-10 md:mt-16 ml-[4%]"
                     >
                         You&apos;re welcome!
                     </motion.p>
@@ -171,7 +171,7 @@ export default function Home() {
                         initial={{ opacity: 0, y: 24 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        className="text-lg md:text-2xl font-light text-white/80 max-w-2xl mt-12 md:mt-20 ml-[4vw] leading-relaxed"
+                        className="text-lg md:text-2xl font-light text-white/80 max-w-2xl mt-12 md:mt-20 ml-[4%] leading-relaxed"
                     >
                         Because making memories shouldn&apos;t be another thing on your to-do list.
                     </motion.p>
@@ -181,7 +181,7 @@ export default function Home() {
             {/* ═══ 5. STORY — Maggie "parenting should feel" ═══ */}
             <SectionBlock className={`${art.section.pad} bg-off-white`}>
                 <div className="max-w-[1500px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-start">
-                    <div>
+                    <div className="min-w-0">
                         <p className={`${art.type.label} mb-8`}>our story</p>
                         <KineticWordStorm
                             words={[
@@ -192,6 +192,7 @@ export default function Home() {
                                 { text: 'should feel', indent: 1 },
                                 { text: 'unforgettable.', indent: 2, accent: true },
                             ]}
+                            className="[&_.type-kinetic]:!text-[clamp(1.5rem,4vw,3.5rem)] [&_.type-kinetic]:!leading-[0.95]"
                         />
                         <motion.p
                             initial={{ opacity: 0 }}
@@ -372,7 +373,6 @@ export default function Home() {
                         <InteractiveHangingCamera redirectTo="/booking" variant="light" />
                     </div>
                     <div className="flex flex-col sm:flex-row justify-center gap-4">
-                        <ChunkyButton href="/booking-session">Book a Session</ChunkyButton>
                         <ChunkyButton href="/branches" variant="secondary">
                             Find a Branch
                         </ChunkyButton>

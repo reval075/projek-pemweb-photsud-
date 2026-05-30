@@ -9,13 +9,13 @@ export default function KineticWordStorm({ words, className = '' }) {
     const reduced = usePrefersReducedMotion();
 
     return (
-        <div className={`flex flex-col gap-0 overflow-hidden ${className}`}>
+        <div className={`flex flex-col gap-[0.15em] overflow-visible ${className}`}>
             {words.map((item, i) => {
                 const { text, indent = 0, italic = false, accent = false } =
                     typeof item === 'string' ? { text: item } : item;
 
                 const indentClass =
-                    indent === 1 ? 'ml-[8vw] md:ml-[14vw]' : indent === 2 ? 'ml-[16vw] md:ml-[28vw]' : indent === -1 ? '-ml-[4vw]' : '';
+                    indent === 1 ? 'ml-[8%] md:ml-[15%]' : indent === 2 ? 'ml-[16%] md:ml-[30%]' : indent === -1 ? '-ml-[4%]' : '';
 
                 const classes = [
                     'type-kinetic font-sans block',

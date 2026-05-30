@@ -16,30 +16,30 @@ export const homeImages = {
     ],
 };
 
-/** Real client booth outputs — keep external URLs; fallback to local placeholders */
+/** Gallery photos — SVG placeholders siap diisi foto asli dari booth */
 export const galleryPhotos = [
     {
-        src: 'https://fotoshare.co/i/2wxtc51',
+        src: '/images/gallery/gallery-01.svg',
         fallback: '/images/gallery/gallery-01.svg',
         alt: 'Memoforia session 1',
     },
     {
-        src: 'https://jepreto.com/booth-photo/view/605d9dda-79af-4ccc-9f68-9e7a437ca7d2',
+        src: '/images/gallery/gallery-02.svg',
         fallback: '/images/gallery/gallery-02.svg',
         alt: 'Memoforia session 2',
     },
     {
-        src: 'https://jepreto.com/booth-photo/view/d66e8462-7349-48eb-8df8-f094c27b5e55',
+        src: '/images/gallery/gallery-03.svg',
         fallback: '/images/gallery/gallery-03.svg',
         alt: 'Memoforia session 3',
     },
     {
-        src: 'https://jepreto.com/booth-photo/view/57f8ff46-488e-47c1-b85f-1408d84cf62f',
+        src: '/images/gallery/gallery-04.svg',
         fallback: '/images/gallery/gallery-04.svg',
         alt: 'Memoforia session 4',
     },
     {
-        src: 'https://jepreto.com/booth-photo/view/16bc3e17-c4df-478c-8a22-0c8febf9f022',
+        src: '/images/gallery/gallery-05.svg',
         fallback: '/images/gallery/gallery-05.svg',
         alt: 'Memoforia session 5',
     },
