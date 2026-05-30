@@ -19,8 +19,8 @@ export default function GuestLayout({ children }) {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
                         <div className="md:col-span-1">
                             <div className="flex items-center space-x-3 mb-4">
-                                <img src="/images/logo.png" alt="MemForia" className="h-12 w-12 rounded-full object-cover"/>
-                                <span className="font-serif text-2xl">MemForia</span>
+                                <img src="/images/logo.png" alt="MemoForia" className="h-12 w-12 rounded-full object-cover"/>
+                                <span className="font-serif text-2xl">MemoForia</span>
                             </div>
                             <p className="text-white/60 text-sm leading-relaxed">Premium Photo Studio & Booth Experience. Capturing your most precious moments with elegance.</p>
                         </div>
@@ -43,15 +43,15 @@ export default function GuestLayout({ children }) {
                         <div>
                             <h4 className="font-sans text-sm uppercase tracking-widest text-accent mb-6">Contact</h4>
                             <ul className="space-y-3">
-                                <li className="flex items-center space-x-3 text-white/60 text-sm"><Camera size={16}/><span>@memforia</span></li>
+                                <li className="flex items-center space-x-3 text-white/60 text-sm"><Camera size={16}/><span>@memoforia</span></li>
                                 <li className="flex items-center space-x-3 text-white/60 text-sm"><Phone size={16}/><span>+62 812-3456-7890</span></li>
-                                <li className="flex items-center space-x-3 text-white/60 text-sm"><Mail size={16}/><span>hello@memforia.com</span></li>
+                                <li className="flex items-center space-x-3 text-white/60 text-sm"><Mail size={16}/><span>memoforia@gmail.com</span></li>
                                 <li className="flex items-center space-x-3 text-white/60 text-sm"><MapPin size={16}/><span>Jakarta, Indonesia</span></li>
                             </ul>
                         </div>
                     </div>
                     <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center">
-                        <p className="text-white/40 text-sm">© 2026 MemForia. All rights reserved.</p>
+                        <p className="text-white/40 text-sm">© 2026 MemoForia. All rights reserved.</p>
                         <p className="text-white/40 text-sm mt-2 md:mt-0">Crafted with ✦ passion for photography</p>
                     </div>
                 </div>

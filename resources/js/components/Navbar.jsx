@@ -55,11 +55,11 @@ export default function Navbar() {
                         <Link href="/" className="flex items-center gap-3">
                             <img
                                 src="/images/logo.png"
-                                alt="MemForia"
+                                alt="MemoForia"
                                 className="h-11 w-11 rounded-full object-cover border-2 border-white shadow-md"
                             />
                             <span className="font-serif text-xl md:text-2xl font-medium text-charcoal tracking-tight">
-                                MemForia
+                                MemoForia
                             </span>
                         </Link>
                     </motion.div>

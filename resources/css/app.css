@@ -42,6 +42,12 @@
   }
 
   /* Maggie-scale editorial typography — Memoforia palette */
+  .type-ultra {
+    font-size: clamp(3.75rem, 15vw, 11rem);
+    line-height: 0.82;
+    letter-spacing: -0.045em;
+  }
+
   .type-mega {
     font-size: clamp(3.25rem, 12vw, 9rem);
     line-height: 0.88;
@@ -52,6 +58,14 @@
     font-size: clamp(2.5rem, 8vw, 6.5rem);
     line-height: 0.9;
     letter-spacing: -0.035em;
+  }
+
+  .type-kinetic {
+    font-size: clamp(2.25rem, 9vw, 7.5rem);
+    line-height: 0.86;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
   }
 
   .type-shout {
