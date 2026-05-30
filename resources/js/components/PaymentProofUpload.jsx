@@ -218,20 +218,38 @@ export default function PaymentProofUpload({ bookingCode, contact, booking, onUp
                 )}
 
                 <div>
-                    <label className="block text-sm font-medium text-charcoal mb-2">Nominal Pembayaran (Rp)</label>
+                    <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-charcoal">Nominal Pembayaran (Rp)</label>
+                        {form.payment_type === 'settlement' && booking?.remaining_amount && (
+                            <span className="text-xs bg-accent/10 text-accent px-2.5 py-1 rounded-full font-medium">
+                                Sisa: {formatCurrency(booking.remaining_amount)}
+                            </span>
+                        )}
+                    </div>
                     <input
                         type="number"
                         min="0"
                         step="1000"
                         value={form.amount}
                         onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))}
-                        placeholder={booking?.total_price ? `Contoh: ${Number(booking.total_price)}` : 'Masukkan nominal'}
+                        placeholder={
+                            form.payment_type === 'settlement' && booking?.remaining_amount
+                                ? `Contoh: ${Number(booking.remaining_amount)}`
+                                : booking?.total_price
+                                ? `Contoh: ${Number(booking.total_price)}`
+                                : 'Masukkan nominal'
+                        }
                         className={`w-full px-4 py-3 rounded-xl border bg-off-white/50 focus:outline-none focus:ring-2 focus:ring-primary/30 ${
                             fieldErrors.amount ? 'border-red-300' : 'border-beige'
                         }`}
                         disabled={uploading}
                     />
                     {fieldErrors.amount && <p className="text-red-600 text-xs mt-2">{fieldErrors.amount}</p>}
+                    {form.payment_type === 'settlement' && booking?.remaining_amount && (
+                        <p className="text-xs text-warm-grey mt-2">
+                            💡 Minimum pembayaran tersisa adalah {formatCurrency(booking.remaining_amount)}
+                        </p>
+                    )}
                 </div>
 
                 <div>

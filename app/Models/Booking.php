@@ -27,6 +27,7 @@ class Booking extends Model
         'approved_at',
         'confirmed_at',
         'dp_expired_at',
+        'settlement_due_at',
         'payment_status',
         'cancelled_at',
         'total_price',
@@ -40,6 +41,7 @@ class Booking extends Model
         'approved_at' => 'datetime',
         'confirmed_at' => 'datetime',
         'dp_expired_at' => 'datetime',
+        'settlement_due_at' => 'datetime',
         'cancelled_at' => 'datetime',
     ];
 
@@ -171,5 +173,48 @@ class Booking extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * Calculate total amount already paid (verified payments only).
+     *
+     * Business rule:
+     * - Only payments with status='verified' count
+     * - Fallback to 0 if no verified payments exist
+     */
+    public function getPaidAmount(): int
+    {
+        return (int) $this->payments()
+            ->where('status', 'verified')
+            ->sum('amount');
+    }
+
+    /**
+     * Calculate remaining amount to be paid.
+     *
+     * Business rule:
+     * - remaining = total_price - paid_amount
+     * - If result < 0, use 0 (overpaid scenario)
+     */
+    public function getRemainingAmount(): int
+    {
+        $remaining = $this->total_price - $this->getPaidAmount();
+        return max(0, $remaining);
+    }
+
+    /**
+     * Determine if settlement payment is overdue.
+     *
+     * Business rule:
+     * - Overdue when: now() > settlement_due_at AND remaining_amount > 0
+     * - Only applicable for confirmed bookings with settlement deadline
+     */
+    public function isSettlementOverdue(): bool
+    {
+        if (! $this->settlement_due_at) {
+            return false;
+        }
+
+        return now()->gt($this->settlement_due_at) && $this->getRemainingAmount() > 0;
     }
 }

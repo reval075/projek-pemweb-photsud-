@@ -134,14 +134,20 @@ class BookingController extends Controller
 
     /**
      * List all bookings for admin.
+     *
+     * Bug fix: Handle 'all', 'semua', or empty status to show all bookings
+     * (not treat them as literal status values)
      */
     public function adminIndex(Request $request)
     {
         $query = Booking::with(['servicePackage', 'packageVariant', 'selectedTemplate', 'addons', 'payments']);
 
-        if ($request->has('status') && $request->status !== '') {
-            $query->where('status', $request->status);
+        // Filter by status if specified and not "all"/"semua"/empty
+        $status = $request->input('status', '');
+        if ($status && ! in_array(strtolower($status), ['all', 'semua', ''], true)) {
+            $query->where('status', $status);
         }
+        // If status is 'all', 'semua', or empty string -> show all (no WHERE clause)
 
         $bookings = $query->latest()->get();
 
@@ -321,6 +327,10 @@ class BookingController extends Controller
                 if ($booking->status === 'confirmed') {
                     if (! $booking->confirmed_at) {
                         $booking->confirmed_at = now();
+                    }
+                    // Set settlement deadline when confirming (event_date + 2 days)
+                    if (! $booking->settlement_due_at) {
+                        $booking->settlement_due_at = Carbon::parse($booking->event_date)->addDays(2)->endOfDay();
                     }
                 }
 
@@ -535,6 +545,7 @@ class BookingController extends Controller
                         'status' => 'confirmed',
                         'confirmed_at' => now(),
                         'payment_status' => 'partially_paid',
+                        'settlement_due_at' => Carbon::parse($booking->event_date)->addDays(2)->endOfDay(),
                     ]);
 
                     // 6. Auto-cancel competing bookings on the same date (inside transaction)
@@ -574,6 +585,7 @@ class BookingController extends Controller
                         $booking->update([
                             'status' => 'confirmed',
                             'confirmed_at' => now(),
+                            'settlement_due_at' => Carbon::parse($booking->event_date)->addDays(2)->endOfDay(),
                         ]);
 
                         // Keep competing-booking handling consistent with DP confirmation.
@@ -666,10 +678,17 @@ class BookingController extends Controller
 
     /**
      * Build a guest-safe tracking payload for public lookup responses.
+     *
+     * Includes payment summary: total_price, paid_amount, remaining_amount, settlement_due_at, is_overdue
      */
     private function formatTrackingPayload(Booking $booking): array
     {
         $uploadCapabilities = $this->resolveUploadCapabilities($booking);
+
+        // Calculate payment summary
+        $paidAmount = $booking->getPaidAmount();
+        $remainingAmount = $booking->getRemainingAmount();
+        $isOverdue = $booking->isSettlementOverdue();
 
         return [
             'booking_code' => $booking->booking_code,
@@ -690,6 +709,11 @@ class BookingController extends Controller
             'cancelled_at' => $booking->cancelled_at,
             'dp_expired_at' => $booking->dp_expired_at,
             'is_dp_expired' => $booking->status === 'expired',
+            // Payment summary fields (NEW)
+            'paid_amount' => $paidAmount,
+            'remaining_amount' => $remainingAmount,
+            'settlement_due_at' => $booking->settlement_due_at,
+            'is_settlement_overdue' => $isOverdue,
             'can_upload_proof' => $uploadCapabilities['can_upload_proof'],
             'allowed_payment_types' => $uploadCapabilities['allowed_payment_types'],
             'service_package' => $booking->servicePackage ? [
@@ -730,6 +754,9 @@ class BookingController extends Controller
 
     /**
      * Determine whether guest can upload payment proof from tracking context.
+     *
+     * Settlement upload is allowed but customer will see overdue alert in UI.
+     * We don't block overdue submissions - admin can still process late payments.
      */
     private function resolveUploadCapabilities(Booking $booking): array
     {
@@ -748,6 +775,7 @@ class BookingController extends Controller
             $allowedTypes = ['dp'];
         } elseif ($booking->status === 'confirmed' && $booking->payment_status === 'partially_paid') {
             $canUpload = true;
+            // Settlement allowed even if overdue; UI will show alert
             $allowedTypes = ['settlement'];
         } elseif ($booking->status === 'confirmed' && $booking->payment_status === 'unpaid') {
             $canUpload = true;

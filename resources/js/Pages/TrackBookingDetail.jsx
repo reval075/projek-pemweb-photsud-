@@ -376,6 +376,39 @@ export default function TrackBookingDetail() {
                                 value={formatCurrency(booking.total_price)}
                             />
 
+                            {/* Payment Summary Section (NEW) */}
+                            <div className="mt-6 pt-6 border-t border-beige">
+                                <h4 className="text-sm font-semibold text-charcoal mb-3">Status Pembayaran</h4>
+                                <div className="bg-off-white rounded-xl p-4 border border-beige/60 space-y-3">
+                                    <InfoRow
+                                        label="Sudah Dibayar"
+                                        value={formatCurrency(booking.paid_amount || 0)}
+                                    />
+                                    <InfoRow
+                                        label="Sisa Tagihan"
+                                        value={formatCurrency(booking.remaining_amount || 0)}
+                                    />
+
+                                    {booking.settlement_due_at && booking.status === 'confirmed' && (
+                                        <InfoRow
+                                            label="Batas Pelunasan"
+                                            value={formatDateTime(booking.settlement_due_at)}
+                                        />
+                                    )}
+                                </div>
+
+                                {/* Overdue Alert (NEW) */}
+                                {booking.is_settlement_overdue && (
+                                    <div className="mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2">
+                                        <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                                        <span>
+                                            <strong>Pelunasan Terlambat</strong><br/>
+                                            Pelunasan telah melewati batas waktu. Silakan lakukan pembayaran secepatnya.
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="mt-6">
                                 <h4 className="text-sm font-semibold text-charcoal mb-3">Riwayat Pembayaran</h4>
                                 {payments.length === 0 ? (
